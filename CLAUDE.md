@@ -159,12 +159,16 @@ NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=your_google_maps_api_key_here
 SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
 SMTP_USER=your_email@gmail.com
-SMTP_PASSWORD=your_app_password_here
+SMTP_PASSWORD=your_16_char_app_password_here  # NOT your regular Gmail password!
 EMAIL_FROM=your_email@gmail.com
 EMAIL_TO=lydstyl@gmail.com
 ```
 
-For Gmail SMTP, generate an App Password at https://myaccount.google.com/apppasswords
+**Gmail SMTP Setup:**
+- `SMTP_PASSWORD` must be an **App Password** (16 characters), NOT your regular Gmail password
+- Enable 2-Step Verification: https://myaccount.google.com/security
+- Generate App Password: https://myaccount.google.com/apppasswords
+- The app password is different from your Gmail password and only allows SMTP email sending
 
 ## Code Organization
 

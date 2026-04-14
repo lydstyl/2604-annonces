@@ -35,12 +35,37 @@ Pour recevoir les notifications par email, configurez les variables SMTP dans `.
 SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
 SMTP_USER=votre_email@gmail.com
-SMTP_PASSWORD=votre_mot_de_passe_app
+SMTP_PASSWORD=votre_mot_de_passe_app_16_caracteres
 EMAIL_FROM=votre_email@gmail.com
 EMAIL_TO=lydstyl@gmail.com
 ```
 
-Pour Gmail, générez un mot de passe d'application sur : https://myaccount.google.com/apppasswords
+### ⚠️ Important : Mot de passe d'application Gmail
+
+**NE PAS utiliser votre mot de passe Gmail habituel !**
+
+Le `SMTP_PASSWORD` doit être un **mot de passe d'application** (16 caractères) généré spécifiquement pour cette application.
+
+#### Comment obtenir un mot de passe d'application Gmail :
+
+1. **Activer la validation en 2 étapes** sur votre compte Google (obligatoire)
+   - Aller sur : https://myaccount.google.com/security
+   - Activer la "Validation en deux étapes"
+
+2. **Générer un mot de passe d'application**
+   - Aller sur : https://myaccount.google.com/apppasswords
+   - Sélectionner "Application" → "Autre (nom personnalisé)"
+   - Taper "Annonces Immobilières" (ou un autre nom)
+   - Cliquer sur "Générer"
+   - **Copier le mot de passe de 16 caractères** (exemple : `abcd efgh ijkl mnop`)
+
+3. **Coller ce mot de passe dans `.env.local`**
+   ```env
+   SMTP_PASSWORD=abcdefghijklmnop
+   ```
+   Note : Enlever les espaces si présents
+
+Ce mot de passe est différent de votre mot de passe Gmail et ne permet que l'envoi d'emails via SMTP.
 
 ## 🏗️ Structure du Projet
 
