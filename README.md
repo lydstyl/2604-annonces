@@ -36,7 +36,7 @@ SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
 SMTP_USER=votre_email@gmail.com
 SMTP_PASSWORD=votre_mot_de_passe_app_16_caracteres
-EMAIL_FROM=votre_email@gmail.com
+EMAIL_FROM=votre_email@gmail.com  # Doit être identique à SMTP_USER
 EMAIL_TO=lydstyl@gmail.com
 ```
 
@@ -66,6 +66,12 @@ Le `SMTP_PASSWORD` doit être un **mot de passe d'application** (16 caractères)
    Note : Enlever les espaces si présents
 
 Ce mot de passe est différent de votre mot de passe Gmail et ne permet que l'envoi d'emails via SMTP.
+
+### 📬 Note sur EMAIL_FROM
+
+- **EMAIL_FROM doit être identique à SMTP_USER** pour éviter les rejets
+- Gmail et la plupart des serveurs SMTP n'autorisent pas l'envoi avec un expéditeur différent du compte authentifié
+- N'utilisez pas un email inexistant ou différent, cela causera des erreurs d'envoi
 
 ## 🏗️ Structure du Projet
 
