@@ -53,6 +53,13 @@ export default async function AnnoncePage({ params }: { params: Promise<{ id: st
         {/* Carrousel d'images */}
         <div className="mb-8">
           <ImageCarousel images={listing.images} alt={listing.title} />
+          {listing.mediaDisclaimer && (
+            <div className="mt-3 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+              <p className="text-sm text-amber-800">
+                ℹ️ {listing.mediaDisclaimer}
+              </p>
+            </div>
+          )}
         </div>
 
         {/* Points forts */}
@@ -117,7 +124,8 @@ export default async function AnnoncePage({ params }: { params: Promise<{ id: st
         {/* Carte */}
         <section className="mb-8">
           <h2 className="text-2xl font-bold text-gray-900 mb-4">📍 Localisation</h2>
-          <MapEmbed location={listing.location} />
+          <MapEmbed location={listing.address} />
+          <p className="text-sm text-gray-600 mt-2">{listing.address}</p>
         </section>
 
         {/* FAQ */}

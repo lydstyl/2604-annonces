@@ -17,11 +17,11 @@ FONCTIONNALITÉS :
 Afficher une annonce immobilière avec :
 
 TITRE :
-Spacieux T3 de 85 m² – Raismes Centre – Disponible fin septembre
+Spacieux T3 de 85 m² – Raismes Centre – Disponible de suite
 
 CONTENU :
 
-🏡 Spacieux T3 de 85 m² – Raismes Centre – Disponible fin septembre
+🏡 Spacieux T3 de 85 m² – Raismes Centre – Disponible de suite
 
 📍 Situé en plein centre de Raismes, proche de toutes commodités (commerces, gare, bus, centre commercial de Petite Forêt).
 
@@ -49,7 +49,7 @@ CONTENU :
 - Au moins 1 CDI dans le foyer (hors période d’essai)
 - Dossier complet demandé
 
-📅 Disponible à partir du 25 septembre 2025
+📅 Disponible aujourd'hui
 
 ÉLÉMENTS VISUELS :
 
