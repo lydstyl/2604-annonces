@@ -124,7 +124,7 @@ export default async function AnnoncePage({ params }: { params: Promise<{ id: st
         {/* Carte */}
         <section className="mb-8">
           <h2 className="text-2xl font-bold text-gray-900 mb-4">📍 Localisation</h2>
-          <MapEmbed location={listing.address} />
+          <MapEmbed location={listing.address} embedUrl={listing.mapEmbedUrl} />
           <p className="text-sm text-gray-600 mt-2">{listing.address}</p>
         </section>
 

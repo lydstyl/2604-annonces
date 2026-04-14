@@ -7,6 +7,7 @@ export interface Listing {
   videoId?: string
   location: string
   address: string // Adresse complète pour Google Maps
+  mapEmbedUrl?: string // URL iframe Google Maps personnalisée (optionnel)
   price: {
     rent: number
     charges: number
@@ -36,6 +37,7 @@ export const listings: Record<string, Listing> = {
     videoId: 'CLYk4N3QttI',
     location: 'Raismes Centre',
     address: 'Bd Roger Claie, 59590 Raismes, France',
+    mapEmbedUrl: 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d635.9327854818555!2d3.4846039697703786!3d50.390210298223806!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x47c2ee979f3b1fd3%3A0xb30f9e3dd17b1154!2sBd%20Roger%20Claie%2C%2059590%20Raismes!5e0!3m2!1sfr!2sfr!4v1776209220125!5m2!1sfr!2sfr',
     price: {
       rent: 610,
       charges: 35,
