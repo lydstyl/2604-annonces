@@ -170,6 +170,13 @@ EMAIL_TO=lydstyl@gmail.com
 - Generate App Password: https://myaccount.google.com/apppasswords
 - The app password is different from your Gmail password and only allows SMTP email sending
 
+**Google Maps API Key (Optional):**
+- The app works WITHOUT an API key using basic embed
+- To get a free API key: https://console.cloud.google.com/
+- Create project → Enable "Maps Embed API" → Create credentials → API key
+- Free tier: 28,000 map loads per month
+- Restrict the key to "Maps Embed API" and your domain for security
+
 ## Code Organization
 
 - **TypeScript:** All files use TypeScript with strict mode enabled

@@ -73,6 +73,54 @@ Ce mot de passe est différent de votre mot de passe Gmail et ne permet que l'en
 - Gmail et la plupart des serveurs SMTP n'autorisent pas l'envoi avec un expéditeur différent du compte authentifié
 - N'utilisez pas un email inexistant ou différent, cela causera des erreurs d'envoi
 
+## 🗺️ Configuration Google Maps (Optionnel)
+
+L'application fonctionne **sans clé API Google Maps** en utilisant un embed basique. Cependant, pour une meilleure intégration et fonctionnalités avancées, vous pouvez obtenir une clé API gratuite.
+
+### Comment obtenir une clé API Google Maps :
+
+1. **Aller sur Google Cloud Console**
+   - Accédez à : https://console.cloud.google.com/
+
+2. **Créer un nouveau projet** (ou utiliser un projet existant)
+   - Cliquer sur le sélecteur de projet en haut
+   - Cliquer sur "Nouveau projet"
+   - Nommer le projet : "Annonces Immobilières"
+   - Cliquer sur "Créer"
+
+3. **Activer l'API Maps Embed**
+   - Aller dans le menu ≡ → "APIs & Services" → "Library"
+   - Rechercher "Maps Embed API"
+   - Cliquer dessus et cliquer sur "Activer"
+
+4. **Créer une clé API**
+   - Aller dans ≡ → "APIs & Services" → "Credentials"
+   - Cliquer sur "+ CREATE CREDENTIALS" → "API key"
+   - **Copier la clé** (format : `AIzaSyXxXxXxXxXxXxXxXxXxXxXxXxXxXxX`)
+
+5. **Sécuriser la clé (recommandé)**
+   - Cliquer sur la clé créée pour l'éditer
+   - Sous "Application restrictions" → Choisir "HTTP referrers (web sites)"
+   - Ajouter votre domaine : `votre-domaine.com/*` et `localhost:3000/*`
+   - Sous "API restrictions" → Choisir "Restrict key"
+   - Sélectionner uniquement "Maps Embed API"
+   - Cliquer sur "Save"
+
+6. **Ajouter la clé dans `.env.local`**
+   ```env
+   NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=AIzaSyXxXxXxXxXxXxXxXxXxXxXxXxXxXxX
+   ```
+
+### 💰 Tarification Google Maps
+
+- **Gratuit jusqu'à 28 000 chargements de cartes par mois**
+- Au-delà : $7 pour 1000 chargements supplémentaires
+- Pour une petite application, vous resterez largement dans les limites gratuites
+
+### ⚠️ Sans clé API
+
+Si vous ne configurez pas `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY`, l'application utilisera un embed Google Maps basique qui fonctionne mais peut avoir des limitations (watermark, moins de fonctionnalités).
+
 ## 🏗️ Structure du Projet
 
 ```
