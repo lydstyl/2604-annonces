@@ -1,0 +1,30 @@
+'use client';
+
+interface MapEmbedProps {
+  location: string;
+  zoom?: number;
+}
+
+export default function MapEmbed({ location, zoom = 15 }: MapEmbedProps) {
+  const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '';
+  const encodedLocation = encodeURIComponent(location);
+
+  // Si pas de clé API, utiliser iframe de base
+  const mapSrc = apiKey
+    ? `https://www.google.com/maps/embed/v1/place?key=${apiKey}&q=${encodedLocation}&zoom=${zoom}`
+    : `https://www.google.com/maps?q=${encodedLocation}&output=embed`;
+
+  return (
+    <div className="relative w-full overflow-hidden rounded-xl shadow-lg">
+      <div className="relative aspect-video w-full">
+        <iframe
+          src={mapSrc}
+          title={`Carte - ${location}`}
+          loading="lazy"
+          className="absolute inset-0 w-full h-full border-0"
+          referrerPolicy="no-referrer-when-downgrade"
+        />
+      </div>
+    </div>
+  );
+}
