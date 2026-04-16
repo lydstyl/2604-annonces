@@ -73,9 +73,19 @@ export const listings: Record<string, Listing> = {
           "Vous devrez fournir : pièce d'identité, 3 derniers bulletins de salaire, contrat de travail, avis d'imposition, justificatif de domicile actuel, et RIB."
       },
       {
+        question: 'Y a-t-il une baignoire ?',
+        answer:
+          "Non, il n'y a pas de baignoire, mais il y a une douche dans la salle d'eau."
+      },
+      {
+        question: 'Y a-t-il un balcon ?',
+        answer:
+          'Oui, le logement dispose d\'un balcon.'
+      },
+      {
         question: 'Les animaux sont-ils acceptés ?',
         answer:
-          'Les animaux de compagnie ne sont pas acceptés dans ce logement.'
+          'Par principe, les animaux de compagnie ne sont pas acceptés. Toutefois, le propriétaire reste ouvert à la discussion au cas par cas : les chats sont par exemple acceptés. L\'accord dépendra de la nature de l\'animal et de la solidité de votre dossier.'
       },
       {
         question: 'Y a-t-il un parking ?',

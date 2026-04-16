@@ -5,6 +5,7 @@ import ImageCarousel from '@/components/ImageCarousel';
 import VideoEmbed from '@/components/VideoEmbed';
 import MapEmbed from '@/components/MapEmbed';
 import FAQSection from '@/components/FAQSection';
+import ChatWidget from '@/components/ChatWidget';
 
 // Génération statique des pages pour toutes les annonces
 export async function generateStaticParams() {
@@ -151,6 +152,9 @@ export default async function AnnoncePage({ params }: { params: Promise<{ id: st
             </div>
           </div>
         </div>
+
+        {/* Chatbot */}
+        <ChatWidget listingId={listing.id} />
       </div>
     </div>
   );

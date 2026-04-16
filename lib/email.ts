@@ -89,6 +89,12 @@ export async function sendCandidatureEmail(candidature: Candidature, listingTitl
             <div class="label">ID de candidature :</div>
             <div class="value">${candidature.id}</div>
           </div>
+
+          <div style="margin-top: 25px; text-align: center;">
+            <a href="${process.env.NEXT_PUBLIC_SITE_URL || 'https://annonces.duckdns.org'}/admin" style="background-color: #0284c7; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">
+              📋 Voir toutes les candidatures
+            </a>
+          </div>
         </div>
         <div class="footer">
           <p>Cette notification a été générée automatiquement par le système de gestion des annonces immobilières.</p>
@@ -111,6 +117,8 @@ Remarques : ${candidature.remarques || 'Aucune remarque'}
 
 Date de soumission : ${new Date(candidature.dateSubmission).toLocaleString('fr-FR')}
 ID de candidature : ${candidature.id}
+
+Voir toutes les candidatures : ${process.env.NEXT_PUBLIC_SITE_URL || 'https://annonces.duckdns.org'}/admin
   `;
 
   const mailOptions = {

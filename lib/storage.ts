@@ -66,3 +66,19 @@ export async function getCandidaturesByListingId(listingId: string): Promise<Can
   const candidatures = await getCandidatures();
   return candidatures.filter((c) => c.listingId === listingId);
 }
+
+// Supprimer une candidature par son ID
+export async function deleteCandidature(id: string): Promise<boolean> {
+  await ensureDataDir();
+
+  const candidatures = await getCandidatures();
+  const initialLength = candidatures.length;
+  const filtered = candidatures.filter((c) => c.id !== id);
+
+  if (filtered.length === initialLength) {
+    return false; // Not found
+  }
+
+  await fs.writeFile(CANDIDATURES_FILE, JSON.stringify(filtered, null, 2), 'utf-8');
+  return true;
+}
