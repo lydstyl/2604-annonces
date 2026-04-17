@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getCandidatures, deleteCandidature } from '@/lib/storage';
+import { getCandidatures, deleteCandidature, updateCandidatureStatut } from '@/lib/storage';
+import type { CandidatureStatut } from '@/lib/storage';
 
 // Verify admin password from header
 function isAuthenticated(request: NextRequest): boolean {
@@ -44,6 +45,38 @@ export async function DELETE(request: NextRequest) {
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error('Error deleting candidature:', error);
+    return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 });
+  }
+}
+
+// PATCH - Update candidature status
+export async function PATCH(request: NextRequest) {
+  if (!isAuthenticated(request)) {
+    return NextResponse.json({ error: 'Non autorisé' }, { status: 401 });
+  }
+
+  try {
+    const { id, statut } = await request.json();
+    if (!id || !statut) {
+      return NextResponse.json({ error: 'ID et statut requis' }, { status: 400 });
+    }
+
+    const validStatuts: CandidatureStatut[] = ['nouveau', 'contacte', 'formulaire_recu', 'en_etude', 'visite_planifiee', 'accepte', 'refuse'];
+    if (!validStatuts.includes(statut)) {
+      return NextResponse.json(
+        { error: `Statut invalide. Valeurs acceptées: ${validStatuts.join(', ')}` },
+        { status: 400 }
+      );
+    }
+
+    const updated = await updateCandidatureStatut(id, statut);
+    if (!updated) {
+      return NextResponse.json({ error: 'Candidature non trouvée' }, { status: 404 });
+    }
+
+    return NextResponse.json(updated);
+  } catch (error) {
+    console.error('Error updating candidature:', error);
     return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 });
   }
 }
