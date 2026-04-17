@@ -20,6 +20,8 @@ export default function ApplicationForm({ listingId, listingTitle }: Application
     email: '',
     revenusMenuels: '',
     peutFournirGarant: false,
+    cdiPlus3Mois: false,
+    dateAmenagement: '',
     remarques: '',
   });
 
@@ -153,21 +155,53 @@ export default function ApplicationForm({ listingId, listingTitle }: Application
             className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
             placeholder="2000"
           />
+          <p className="text-xs text-gray-500 mt-1">Incluez votre salaire net, les aides (CAF, etc.) et tout autre revenu régulier</p>
         </div>
 
-        {/* Garant */}
-        <div className="flex items-start">
-          <input
-            type="checkbox"
-            id="peutFournirGarant"
-            name="peutFournirGarant"
-            checked={formData.peutFournirGarant}
-            onChange={handleChange}
-            className="mt-1 h-5 w-5 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
-          />
-          <label htmlFor="peutFournirGarant" className="ml-3 text-gray-700">
-            Je peux fournir un garant ou une garantie
+        {/* CDI + Garant */}
+        <div className="space-y-3">
+          <div className="flex items-start">
+            <input
+              type="checkbox"
+              id="cdiPlus3Mois"
+              name="cdiPlus3Mois"
+              checked={formData.cdiPlus3Mois}
+              onChange={handleChange}
+              className="mt-1 h-5 w-5 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
+            />
+            <label htmlFor="cdiPlus3Mois" className="ml-3 text-gray-700">
+              Je suis en CDI depuis plus de 3 mois (hors période d&apos;essai)
+            </label>
+          </div>
+
+          <div className="flex items-start">
+            <input
+              type="checkbox"
+              id="peutFournirGarant"
+              name="peutFournirGarant"
+              checked={formData.peutFournirGarant}
+              onChange={handleChange}
+              className="mt-1 h-5 w-5 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
+            />
+            <label htmlFor="peutFournirGarant" className="ml-3 text-gray-700">
+              Je peux fournir un garant ou une garantie
+            </label>
+          </div>
+        </div>
+
+        {/* Date d'aménagement souhaitée */}
+        <div>
+          <label htmlFor="dateAmenagement" className="block text-sm font-semibold text-gray-700 mb-2">
+            Date d&apos;aménagement souhaitée
           </label>
+          <input
+            type="date"
+            id="dateAmenagement"
+            name="dateAmenagement"
+            value={formData.dateAmenagement}
+            onChange={handleChange}
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+          />
         </div>
 
         {/* Remarques */}

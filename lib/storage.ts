@@ -35,6 +35,8 @@ export interface Candidature {
   email: string;
   revenusMenuels: number;
   peutFournirGarant: boolean;
+  cdiPlus3Mois?: boolean;
+  dateAmenagement?: string;
   remarques: string;
   dateSubmission: string;
   source?: Source;

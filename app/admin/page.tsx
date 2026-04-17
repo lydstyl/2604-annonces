@@ -12,6 +12,8 @@ interface Candidature {
   email: string;
   revenusMenuels: number;
   peutFournirGarant: boolean;
+  cdiPlus3Mois?: boolean;
+  dateAmenagement?: string;
   remarques: string;
   dateSubmission: string;
   source?: string;
@@ -478,6 +480,11 @@ export default function AdminPage() {
                                 Garant ✓
                               </span>
                             )}
+                            {c.cdiPlus3Mois && (
+                              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                                CDI &gt; 3 mois ✓
+                              </span>
+                            )}
                             {csrc && (
                               <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${csrc.bg} ${csrc.text}`}>
                                 {csrc.label}
@@ -529,6 +536,16 @@ export default function AdminPage() {
                             <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Garant</p>
                             <p className="font-medium">{c.peutFournirGarant ? 'Oui ✓' : 'Non ✗'}</p>
                           </div>
+                          <div>
+                            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">CDI &gt; 3 mois</p>
+                            <p className="font-medium">{c.cdiPlus3Mois ? 'Oui ✓' : 'Non ✗'}</p>
+                          </div>
+                          {c.dateAmenagement && (
+                            <div>
+                              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Date d&apos;aménagement souhaitée</p>
+                              <p className="font-medium">{new Date(c.dateAmenagement).toLocaleDateString('fr-FR')}</p>
+                            </div>
+                          )}
                         </div>
 
                         {/* Status selector for candidature */}

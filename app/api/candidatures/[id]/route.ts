@@ -12,7 +12,7 @@ export async function POST(
     const body = await request.json();
 
     // Validation des champs requis
-    const { nom, prenom, telephone, email, revenusMenuels, peutFournirGarant, remarques } = body;
+    const { nom, prenom, telephone, email, revenusMenuels, peutFournirGarant, cdiPlus3Mois, dateAmenagement, remarques } = body;
 
     if (!nom || !prenom || !telephone || !email || revenusMenuels === undefined) {
       return NextResponse.json(
@@ -57,6 +57,8 @@ export async function POST(
       email: email.trim(),
       revenusMenuels: revenusNumber,
       peutFournirGarant: !!peutFournirGarant,
+      cdiPlus3Mois: !!cdiPlus3Mois,
+      dateAmenagement: dateAmenagement || '',
       remarques: remarques?.trim() || '',
     });
 
