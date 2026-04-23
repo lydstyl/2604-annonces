@@ -133,6 +133,16 @@ export const listings: Record<string, Listing> = {
           "Vous devrez fournir : pièce d'identité, 3 derniers bulletins de salaire, contrat de travail, avis d'imposition, justificatif de domicile actuel, et RIB."
       },
       {
+        question: "Quel est le DPE (Diagnostic de Performance Énergétique) de ce logement ?",
+        answer:
+          "Le DPE de ce logement est classé C. Cette étiquette énergétique indique une consommation d'énergie modérée, ce qui représente un bon équilibre entre confort et efficacité énergétique. Le chauffage au gaz permet de maîtriser les coûts énergétiques."
+      },
+      {
+        question: 'Y a-t-il un garage ?',
+        answer:
+          "Non, le logement ne dispose pas d'un garage privatif. En revanche, le stationnement est facile et gratuit dans la rue à proximité immédiate de l'appartement."
+      },
+      {
         question: 'Y a-t-il une baignoire ?',
         answer:
           "Non, il n'y a pas de baignoire, mais il y a une douche dans la salle d'eau."
