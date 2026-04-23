@@ -165,7 +165,7 @@ export const listings: Record<string, Listing> = {
       {
         question: 'Les charges incluent quoi ?',
         answer:
-          "Les charges de 35€/mois couvrent l'entretien des parties communes et l'eau. L'électricité et le gaz sont à la charge du locataire."
+          "Les charges de 35€/mois couvrent l'entretien des parties communes et l'eau pour une personne. Ce montant augmente de 15 € par personne supplémentaire (couple ou famille avec enfant(s)). Les charges sont sujettes à régularisation annuelle en fonction de la consommation réelle. L'électricité et le gaz restent à la charge du locataire."
       },
       {
         question: 'Quel est le montant minimum de revenus requis ?',
