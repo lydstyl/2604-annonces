@@ -27,7 +27,7 @@ export interface Listing {
 export const listings: Record<string, Listing> = {
   'raismes-t3': {
     id: 'raismes-t3',
-    title: 'Spacieux T3 de 85 m² – Raismes Centre – Disponible de suite',
+    title: 'Spacieux T3 de 85 m² – Raismes Centre – Disponible fin juin 2026',
     description: `📍 Situé en plein centre de Raismes, proche de toutes commodités (commerces, gare, bus, centre commercial de Petite Forêt).`,
     images: [
       '/images/2026-04-T3/PXL_20260415_145614796_832.jpg',
@@ -120,7 +120,7 @@ export const listings: Record<string, Listing> = {
       "Au moins 1 CDI dans le foyer (hors période d'essai)",
       'Dossier complet demandé'
     ],
-    availableFrom: 'aujourd’hui',
+    availableFrom: 'fin juin 2026',
     faq: [
       {
         question: 'Quand puis-je visiter le logement ?',

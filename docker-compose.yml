@@ -1,0 +1,12 @@
+services:
+  annonces:
+    build: .
+    container_name: annonces
+    restart: unless-stopped
+    network_mode: host
+    env_file:
+      - .env.local
+    environment:
+      - PORT=3010
+    volumes:
+      - ./data:/app/data
