@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { saveCandidature } from '@/lib/storage';
-import { sendCandidatureEmail } from '@/lib/email';
+import { sendCandidatureEmail, sendVisitRdvEmail } from '@/lib/email';
 import { appendCandidatureToSheet } from '@/lib/sheets';
 import { getListingById } from '@/lib/listings';
+import { isEligibleVisitRdv } from '@/lib/eligibility';
 
 export async function POST(
   request: NextRequest,
@@ -70,6 +71,24 @@ export async function POST(
     } catch (emailError) {
       console.error('Erreur lors de l\'envoi de l\'email:', emailError);
       // On continue même si l'email échoue (la candidature est déjà sauvegardée)
+    }
+
+    // Auto-email RDV : si le candidat est éligible (CDI > 3 mois + revenus ≥ seuil GLI
+    // ou revenus ≥ 3× loyer avec garantie Visale), lui envoyer le lien de réservation.
+    // L'email de notification ci-dessus part TOUJOURS, celui-ci est conditionnel.
+    if (
+      isEligibleVisitRdv({
+        cdiPlus3Mois: candidature.cdiPlus3Mois,
+        revenusMenuels: candidature.revenusMenuels,
+        peutFournirGarant: candidature.peutFournirGarant,
+      })
+    ) {
+      try {
+        await sendVisitRdvEmail(candidature, listing);
+      } catch (rdvEmailError) {
+        console.error('Erreur lors de l\'envoi de l\'email RDV:', rdvEmailError);
+        // On continue même si l'email échoue (la candidature est déjà sauvegardée)
+      }
     }
 
     // Écrire dans le Google Sheet (ne fait pas planter si ça échoue)

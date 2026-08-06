@@ -11,6 +11,17 @@ interface ImageCarouselProps {
 export default function ImageCarousel({ images, alt }: ImageCarouselProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
 
+  // Pas d'images (annonce vierge) : afficher un placeholder au lieu de crasher
+  if (images.length === 0) {
+    return (
+      <div className="relative w-full overflow-hidden rounded-xl shadow-lg">
+        <div className="relative aspect-video w-full bg-gray-200 flex items-center justify-center">
+          <p className="text-gray-500 text-lg">📷 Photos à venir</p>
+        </div>
+      </div>
+    );
+  }
+
   const goToPrevious = () => {
     setCurrentIndex((prevIndex) =>
       prevIndex === 0 ? images.length - 1 : prevIndex - 1
