@@ -176,6 +176,16 @@ export const listings: Record<string, Listing> = {
         question: 'Le garant est-il obligatoire ?',
         answer:
           "Le garant n'est pas obligatoire si vos revenus atteignent au moins 3 fois le loyer charges comprises (1 935 €/mois). En revanche, si vos revenus sont inférieurs à ce seuil, un garant est fortement recommandé pour que votre dossier puisse être accepté."
+      },
+      {
+        question: 'Quelles sont les superficies des pièces ?',
+        answer:
+          "Voici le détail des surfaces par pièce (loi Carrez) :\n\n• **Séjour** — 30,37 m²\n• **Chambre 2** — 17,81 m²\n• **Cuisine** — 11,59 m²\n• **Chambre 1** — 11,72 m²\n• **Dégagement** — 10,68 m²\n• **Salle de bain** — 3,34 m²\n\nSoit environ **85 m²** au total (surface Carrez). La surface au sol est identique pour chaque pièce."
+      },
+      {
+        question: "Quels sont les critères et pièces demandées par l'assurance Garantie Loyers Impayés (GLI) ?",
+        answer:
+          "Voici ce que l'assurance GLI exigera pour accepter votre dossier :\n\n**✅ Critères obligatoires**\n• **Revenus** : loyer CC ≤ 33 % des revenus nets mensuels du foyer\n• **Solvabilité** : revenus nets ≥ 2,7× le loyer (parfois 3× selon l'assureur)\n• **Contrat de travail** : CDI hors période d'essai (ou fonctionnaire titulaire, ou CDD si revenus très confortables)\n• **Garant** (recommandé) : revenus du garant ≥ 3× le loyer\n\n**📄 Pièces à fournir**\n1. Carte d'identité ou passeport\n2. Contrat de travail + justificatif de fin de période d'essai\n3. 3 dernières fiches de paie\n4. Dernier avis d'imposition ou avis de situation\n5. Justificatif de domicile actuel\n6. RIB pour le prélèvement des loyers\n7. Si garant : sa pièce d'identité + avis d'imposition + justificatif de domicile\n\n**⚠️ Motifs de refus fréquents**\n• CDD sans CDI derrière\n• Période d'essai en cours\n• Fichage Banque de France (interdit bancaire)\n• Ratio revenus/loyer > 35 %\n• Travailleur indépendant avec moins de 2 ans d'activité (sauf bilans solides)"
       }
     ]
   }

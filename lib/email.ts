@@ -90,9 +90,12 @@ export async function sendCandidatureEmail(candidature: Candidature, listingTitl
             <div class="value">${candidature.id}</div>
           </div>
 
-          <div style="margin-top: 25px; text-align: center;">
+          <div style="margin-top: 25px; text-align: center; display: flex; flex-direction: column; gap: 10px;">
             <a href="${process.env.NEXT_PUBLIC_SITE_URL || 'https://annonces.duckdns.org'}/admin" style="background-color: #0284c7; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">
-              📋 Voir toutes les candidatures
+              📋 Voir toutes les candidatures (admin)
+            </a>
+            <a href="https://docs.google.com/spreadsheets/d/1rZ9NOGgLcBHKwVQvtwjvB3A0k5BZ5eC46LhbMffQM50" style="background-color: #0f9d58; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">
+              📊 Voir le Google Sheets
             </a>
           </div>
         </div>
@@ -118,7 +121,8 @@ Remarques : ${candidature.remarques || 'Aucune remarque'}
 Date de soumission : ${new Date(candidature.dateSubmission).toLocaleString('fr-FR')}
 ID de candidature : ${candidature.id}
 
-Voir toutes les candidatures : ${process.env.NEXT_PUBLIC_SITE_URL || 'https://annonces.duckdns.org'}/admin
+Voir toutes les candidatures (admin) : ${process.env.NEXT_PUBLIC_SITE_URL || 'https://annonces.duckdns.org'}/admin
+📊 Voir le Google Sheets : https://docs.google.com/spreadsheets/d/1rZ9NOGgLcBHKwVQvtwjvB3A0k5BZ5eC46LhbMffQM50
   `;
 
   const mailOptions = {

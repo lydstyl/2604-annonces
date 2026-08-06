@@ -35,4 +35,5 @@ next-env.d.ts
 
 # Data storage
 /data/*.json
+/data/*.bak
 !/data/.gitkeep

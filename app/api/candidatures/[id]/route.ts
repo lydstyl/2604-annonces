@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { saveCandidature } from '@/lib/storage';
 import { sendCandidatureEmail } from '@/lib/email';
+import { appendCandidatureToSheet } from '@/lib/sheets';
 import { getListingById } from '@/lib/listings';
 
 export async function POST(
@@ -69,8 +70,10 @@ export async function POST(
     } catch (emailError) {
       console.error('Erreur lors de l\'envoi de l\'email:', emailError);
       // On continue même si l'email échoue (la candidature est déjà sauvegardée)
-      // En production, vous pourriez vouloir logger ceci dans un système de monitoring
     }
+
+    // Écrire dans le Google Sheet (ne fait pas planter si ça échoue)
+    await appendCandidatureToSheet(candidature);
 
     return NextResponse.json(
       {
