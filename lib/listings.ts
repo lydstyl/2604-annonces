@@ -123,6 +123,11 @@ export const listings: Record<string, Listing> = {
     availableFrom: 'fin juin 2026',
     faq: [
       {
+        question: 'Quelles sont les conditions pour obtenir ce logement ?',
+        answer:
+          "Voici les conditions d'acceptation de votre dossier, telles qu'exigées par l'assurance Garantie Loyers Impayés (GLI) :\n\n**✅ Critères de solvabilité**\n• **Revenus** : le loyer charges comprises (665 €/mois) doit représenter au maximum 33 % de vos revenus nets mensuels, soit des revenus d'au moins **~2 016 €/mois**\n• **Situation professionnelle** : CDI hors période d'essai ou fonctionnaire (un CDD avec au moins 12 mois restants peut être accepté si le taux d'effort est ≤ 25 %)\n• **Allocations CAF** : prises en compte à hauteur de 50 % maximum\n• **Exclusions** : demandeur d'emploi ou bénéficiaire du RSA exclu\n\n**📄 Dossier complet à fournir**\n1. Pièce d'identité (CNI ou passeport)\n2. 3 derniers bulletins de salaire\n3. Contrat de travail\n4. Dernier avis d'imposition\n5. Justificatif de domicile actuel\n6. RIB\n\n**💡 Alternative : garantie Visale**\nSi vos revenus sont inférieurs au seuil GLI, la garantie Visale (caution gratuite d'Action Logement) peut être acceptée en alternative. Les revenus doivent alors atteindre environ **3× le loyer, soit 1 995 €/mois**."
+      },
+      {
         question: 'Quand puis-je visiter le logement ?',
         answer:
           'Les visites sont organisées sur rendez-vous. Après avoir soumis votre candidature, nous vous contacterons pour organiser une visite si votre profil correspond aux critères.'
@@ -185,9 +190,35 @@ export const listings: Record<string, Listing> = {
       {
         question: "Quels sont les critères et pièces demandées par l'assurance Garantie Loyers Impayés (GLI) ?",
         answer:
-          "Voici ce que l'assurance GLI exigera pour accepter votre dossier :\n\n**✅ Critères obligatoires**\n• **Revenus** : loyer CC ≤ 33 % des revenus nets mensuels du foyer\n• **Solvabilité** : revenus nets ≥ 2,7× le loyer (parfois 3× selon l'assureur)\n• **Contrat de travail** : CDI hors période d'essai (ou fonctionnaire titulaire, ou CDD si revenus très confortables)\n• **Garant** (recommandé) : revenus du garant ≥ 3× le loyer\n\n**📄 Pièces à fournir**\n1. Carte d'identité ou passeport\n2. Contrat de travail + justificatif de fin de période d'essai\n3. 3 dernières fiches de paie\n4. Dernier avis d'imposition ou avis de situation\n5. Justificatif de domicile actuel\n6. RIB pour le prélèvement des loyers\n7. Si garant : sa pièce d'identité + avis d'imposition + justificatif de domicile\n\n**⚠️ Motifs de refus fréquents**\n• CDD sans CDI derrière\n• Période d'essai en cours\n• Fichage Banque de France (interdit bancaire)\n• Ratio revenus/loyer > 35 %\n• Travailleur indépendant avec moins de 2 ans d'activité (sauf bilans solides)"
+          "Voici ce que l'assurance GLI exigera pour accepter votre dossier :\n\n**✅ Critères obligatoires**\n• **Revenus** : loyer CC ≤ 33 % des revenus nets mensuels du foyer\n• **Solvabilité** : revenus nets ≥ 3× le loyer charges comprises (soit ~2 016 € pour 665 €/mois)\n• **Contrat de travail** : CDI hors période d'essai (ou fonctionnaire titulaire, ou CDD si revenus très confortables)\n• **Garant** (recommandé) : revenus du garant ≥ 3× le loyer\n\n**📄 Pièces à fournir**\n1. Carte d'identité ou passeport\n2. Contrat de travail + justificatif de fin de période d'essai\n3. 3 dernières fiches de paie\n4. Dernier avis d'imposition ou avis de situation\n5. Justificatif de domicile actuel\n6. RIB pour le prélèvement des loyers\n7. Si garant : sa pièce d'identité + avis d'imposition + justificatif de domicile\n\n**⚠️ Motifs de refus fréquents**\n• CDD sans CDI derrière\n• Période d'essai en cours\n• Fichage Banque de France (interdit bancaire)\n• Ratio revenus/loyer > 33 %\n• Travailleur indépendant avec moins de 2 ans d'activité (sauf bilans solides)"
       }
     ]
+  },
+  // Annonce vierge — en attente de contenu (photos, FAQ, prix définitif)
+  'appt5': {
+    id: 'appt5',
+    title: 'T2 au 32 B rue Henri Durre, 59590 Raismes (annonce en cours de préparation)',
+    description:
+      'Appartement T2 situé au 32 B rue Henri Durre, 59590 Raismes. Description complète à venir.',
+    images: [], // photos à ajouter
+    location: 'Raismes',
+    address: '32 B rue Henri Durre, 59590 Raismes, France',
+    price: {
+      rent: 0, // prix à définir
+      charges: 0, // prix à définir
+      deposit: 0, // prix à définir
+    },
+    features: [
+      'Appartement T2',
+      '32 B rue Henri Durre, 59590 Raismes',
+    ],
+    conditions: [
+      'Revenus nets ≥ 3 × le loyer charges comprises',
+      "Au moins 1 CDI dans le foyer (hors période d'essai)",
+      'Dossier complet demandé',
+    ],
+    availableFrom: 'à définir',
+    faq: [], // FAQ à rédiger
   }
 }
 

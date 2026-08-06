@@ -79,20 +79,24 @@ export default async function AnnoncePage({ params }: { params: Promise<{ id: st
         {/* Loyer & charges */}
         <section className="mb-8 card p-6 bg-primary-50 border-2 border-primary-200">
           <h2 className="text-2xl font-bold text-gray-900 mb-4">💶 Loyer & charges</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div>
-              <p className="text-gray-600 text-sm">Loyer</p>
-              <p className="text-2xl font-bold text-primary-700">{listing.price.rent} €<span className="text-base font-normal text-gray-600">/mois</span></p>
+          {listing.price.rent > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div>
+                <p className="text-gray-600 text-sm">Loyer</p>
+                <p className="text-2xl font-bold text-primary-700">{listing.price.rent} €<span className="text-base font-normal text-gray-600">/mois</span></p>
+              </div>
+              <div>
+                <p className="text-gray-600 text-sm">Charges</p>
+                <p className="text-2xl font-bold text-primary-700">{listing.price.charges} €<span className="text-base font-normal text-gray-600">/mois</span></p>
+              </div>
+              <div>
+                <p className="text-gray-600 text-sm">Dépôt de garantie</p>
+                <p className="text-2xl font-bold text-primary-700">{listing.price.deposit} €</p>
+              </div>
             </div>
-            <div>
-              <p className="text-gray-600 text-sm">Charges</p>
-              <p className="text-2xl font-bold text-primary-700">{listing.price.charges} €<span className="text-base font-normal text-gray-600">/mois</span></p>
-            </div>
-            <div>
-              <p className="text-gray-600 text-sm">Dépôt de garantie</p>
-              <p className="text-2xl font-bold text-primary-700">{listing.price.deposit} €</p>
-            </div>
-          </div>
+          ) : (
+            <p className="text-lg text-gray-700">Prix à définir — contactez-nous pour plus d'informations.</p>
+          )}
         </section>
 
         {/* Conditions de location */}
@@ -130,10 +134,12 @@ export default async function AnnoncePage({ params }: { params: Promise<{ id: st
         </section>
 
         {/* FAQ */}
-        <section className="mb-8">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">❓ Questions fréquentes</h2>
-          <FAQSection items={listing.faq} />
-        </section>
+        {listing.faq.length > 0 && (
+          <section className="mb-8">
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">❓ Questions fréquentes</h2>
+            <FAQSection items={listing.faq} />
+          </section>
+        )}
 
         {/* CTA */}
         <div className="sticky bottom-8 z-10">
