@@ -89,4 +89,22 @@ describe('isEligibleVisitRdv — auto-email RDV (raismes-t3)', () => {
       isEligibleVisitRdv({ cdiPlus3Mois: true, revenusMenuels: 2016, peutFournirGarant: false })
     ).toBe(true);
   });
+
+  it('accepte une garantie Visale seule, sans CDI', () => {
+    expect(
+      isEligibleVisitRdv({ garantieVisale: true, cdiPlus3Mois: false, revenusMenuels: 0, peutFournirGarant: false })
+    ).toBe(true);
+  });
+
+  it('accepte une garantie Visale avec revenus faibles (1200 €)', () => {
+    expect(
+      isEligibleVisitRdv({ garantieVisale: true, cdiPlus3Mois: false, revenusMenuels: 1200, peutFournirGarant: false })
+    ).toBe(true);
+  });
+
+  it('refuse sans garantie Visale ni CDI', () => {
+    expect(
+      isEligibleVisitRdv({ garantieVisale: false, cdiPlus3Mois: false, revenusMenuels: 1200, peutFournirGarant: false })
+    ).toBe(false);
+  });
 });

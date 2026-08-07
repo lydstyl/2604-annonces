@@ -36,6 +36,7 @@ export interface Candidature {
   revenusMenuels: number;
   peutFournirGarant: boolean;
   cdiPlus3Mois?: boolean;
+  garantieVisale?: boolean;
   dateAmenagement?: string;
   remarques: string;
   dateSubmission: string;
