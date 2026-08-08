@@ -38,13 +38,16 @@ describe('getListingCards — cartes de la home page', () => {
     expect(card.coverImage).toBeTruthy();
   });
 
-  it('la carte appt5 : T2, 57 m², 550 € CC, pas de photo de couverture (images vides)', () => {
+  it('la carte appt5 : T2, 57 m², 550 € CC, Raismes, photo de couverture = appt5-01', () => {
     const card = getListingCards().find((c) => c.id === 'appt5')!;
     expect(card).toBeDefined();
     expect(card.type).toBe('T2');
     expect(card.surface).toBe(57);
     expect(card.rentChargesComprises).toBe(550);
     expect(card.location).toBe('Raismes');
-    expect(card.coverImage).toBeNull();
+    // photo de couverture = première image dispo
+    const listing = getListingById('appt5')!;
+    expect(card.coverImage).toBe(listing.images[0]);
+    expect(card.coverImage).toBe('/images/2026-04-appt5/appt5-01.jpg');
   });
 });

@@ -206,7 +206,24 @@ export const listings: Record<string, Listing> = {
     title: 'T2 lumineux de 57 m² – Raismes Centre – Disponible fin octobre 2026',
     surface: 57,
     description: `📍 Situé au 32 B rue Henri Durre, en plein centre de Raismes, proche de toutes commodités (commerces, gare, bus, centre commercial de Petite Forêt).`,
-    images: [], // photos à ajouter (Gabriel fournira)
+    images: [
+      '/images/2026-04-appt5/appt5-01.jpg',
+      '/images/2026-04-appt5/appt5-02.jpg',
+      '/images/2026-04-appt5/appt5-03.jpg',
+      '/images/2026-04-appt5/appt5-04.jpg',
+      '/images/2026-04-appt5/appt5-05.jpg',
+      '/images/2026-04-appt5/appt5-06.jpg',
+      '/images/2026-04-appt5/appt5-07.jpg',
+      '/images/2026-04-appt5/appt5-08.jpg',
+      '/images/2026-04-appt5/appt5-09.jpg',
+      '/images/2026-04-appt5/appt5-10.jpg',
+      '/images/2026-04-appt5/appt5-11.jpg',
+      '/images/2026-04-appt5/appt5-12.jpg',
+      '/images/2026-04-appt5/appt5-13.jpg',
+      '/images/2026-04-appt5/appt5-14.jpg',
+      '/images/2026-04-appt5/appt5-15.jpg',
+    ],
+    videoId: '_YqCHD4vFo8',
     location: 'Raismes',
     address: '32 B rue Henri Durre, 59590 Raismes, France',
     price: {
@@ -214,6 +231,8 @@ export const listings: Record<string, Listing> = {
       charges: 50,
       deposit: 500,
     },
+    mediaDisclaimer:
+      'La video de visite date de 2019 : elle donne une bonne idee du logement mais l appartement a pu evoluer depuis (les photos sont plus recentes).',
     features: [
       'Appartement T2 lumineux de 57 m²',
       'Cuisine équipée (9 caissons, évier, plaques de cuisson, hotte)',

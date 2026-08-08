@@ -89,9 +89,17 @@ describe('Listing appt5 (T2 n°5 – 32 B rue Henri Durre)', () => {
     expect(listing.type).toBe('T2');
   });
 
-  it('a des images vides en attendant les photos (page doit tenir sans crash)', () => {
+  it('a les 15 photos et la video de visite (appt5-01.jpg → appt5-15.jpg, ordre 01 à 15)', () => {
     const listing = getListingById('appt5')!;
-    expect(listing.images).toEqual([]);
+    expect(listing.images).toHaveLength(15);
+    expect(listing.images[0]).toBe('/images/2026-04-appt5/appt5-01.jpg');
+    expect(listing.images[14]).toBe('/images/2026-04-appt5/appt5-15.jpg');
+    listing.images.forEach((img, i) => {
+      const n = String(i + 1).padStart(2, '0');
+      expect(img).toBe(`/images/2026-04-appt5/appt5-${n}.jpg`);
+    });
+    expect(listing.videoId).toBe('_YqCHD4vFo8');
+    expect(listing.mediaDisclaimer).toContain('2019');
   });
 
   it('a une FAQ complète (conditions GLI, DPE, surfaces, charges)', () => {
