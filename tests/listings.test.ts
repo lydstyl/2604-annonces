@@ -75,7 +75,7 @@ describe('Listing raismes-t3', () => {
   });
 });
 
-describe('Listing appt5 (nouvelle annonce vierge)', () => {
+describe('Listing appt5 (T2 n°5 – 32 B rue Henri Durre)', () => {
   it('existe avec id appt5 (URL /annonce/appt5)', () => {
     expect(getListingById('appt5')).toBeDefined();
     expect(listings['appt5']).toBeDefined();
@@ -86,12 +86,24 @@ describe('Listing appt5 (nouvelle annonce vierge)', () => {
     expect(listing.address).toContain('Henri Durre');
     expect(listing.address).toContain('Raismes');
     expect(listing.title.toLowerCase()).toContain('t2');
+    expect(listing.type).toBe('T2');
   });
 
-  it('a des images et une FAQ vides (page doit tenir sans crash)', () => {
+  it('a des images vides en attendant les photos (page doit tenir sans crash)', () => {
     const listing = getListingById('appt5')!;
     expect(listing.images).toEqual([]);
-    expect(listing.faq).toEqual([]);
+  });
+
+  it('a une FAQ complète (conditions GLI, DPE, surfaces, charges)', () => {
+    const listing = getListingById('appt5')!;
+    expect(listing.faq.length).toBeGreaterThan(5);
+    const faq = listing.faq.find(
+      (item) => item.question === 'Quelles sont les conditions pour obtenir ce logement ?'
+    );
+    expect(faq).toBeDefined();
+    expect(faq!.answer).toContain('1 667');
+    expect(faq!.answer).toContain('Visale');
+    expect(faq!.answer).toContain('1 650');
   });
 
   it('a des conditions par défaut non vides', () => {
@@ -99,10 +111,16 @@ describe('Listing appt5 (nouvelle annonce vierge)', () => {
     expect(listing.conditions.length).toBeGreaterThan(0);
   });
 
-  it('a un prix à définir (0) sans casser la structure', () => {
+  it('a le bon prix : 500 € + 50 € charges = 550 € CC, caution 500 €', () => {
     const listing = getListingById('appt5')!;
-    expect(listing.price.rent).toBe(0);
-    expect(listing.price.charges).toBe(0);
-    expect(listing.price.deposit).toBe(0);
+    expect(listing.price.rent).toBe(500);
+    expect(listing.price.charges).toBe(50);
+    expect(listing.price.deposit).toBe(500);
+    expect(listing.price.rent + listing.price.charges).toBe(550);
+  });
+
+  it('est disponible fin octobre 2026', () => {
+    const listing = getListingById('appt5')!;
+    expect(listing.availableFrom).toContain('octobre');
   });
 });

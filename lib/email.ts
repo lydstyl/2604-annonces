@@ -2,7 +2,7 @@ import nodemailer from 'nodemailer';
 import type { Candidature } from './storage';
 import type { Listing } from './listings';
 
-// Lien calendrier de réservation de visite
+// Lien calendrier de réservation de visite (défaut : agenda T3)
 export const VISIT_CALENDAR_URL = 'https://calendar.app.google/DQPx7dskXd7bY6bq8';
 
 // Configuration du transporteur email
@@ -25,6 +25,8 @@ export async function sendVisitRdvEmail(candidature: Candidature, listing: Listi
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://annonces.duckdns.org';
   const annonceUrl = `${siteUrl}/annonce/${listing.id}`;
+  const calendarUrl = listing.calendarUrl || VISIT_CALENDAR_URL;
+  const logementLabel = listing.type ? `l'appartement ${listing.type} situé à Raismes` : 'le logement situé à Raismes';
 
   const prixLigne =
     listing.price.rent > 0
@@ -33,14 +35,14 @@ export async function sendVisitRdvEmail(candidature: Candidature, listing: Listi
 
   const emailText = `Bonjour ${candidature.prenom},
 
-Je reviens vers vous suite à votre candidature pour l'appartement T3 situé à Raismes.
+Je reviens vers vous suite à votre candidature pour ${logementLabel}.
 
 👉 Lien vers l'annonce : ${annonceUrl}
 
 Votre profil correspond à ce que je recherche, je vous propose donc de visiter le logement.
 
 Vous pouvez directement réserver un créneau de visite à votre convenance via le lien ci-dessous :
-👉 Prendre rendez-vous : ${VISIT_CALENDAR_URL}
+👉 Prendre rendez-vous : ${calendarUrl}
 
 ${prixLigne}
 
@@ -71,12 +73,12 @@ Gabriel Brun`;
         </div>
         <div class="content">
           <p>Bonjour ${candidature.prenom},</p>
-          <p>Je reviens vers vous suite à votre candidature pour l'appartement T3 situé à Raismes.</p>
+          <p>Je reviens vers vous suite à votre candidature pour ${logementLabel}.</p>
           <p>👉 Lien vers l'annonce : <a href="${annonceUrl}">${annonceUrl}</a></p>
           <p>Votre profil correspond à ce que je recherche, je vous propose donc de visiter le logement.</p>
           <p>Vous pouvez directement réserver un créneau de visite à votre convenance via le lien ci-dessous :</p>
           <div class="cta">
-            <a href="${VISIT_CALENDAR_URL}">📅 Prendre rendez-vous</a>
+            <a href="${calendarUrl}">📅 Prendre rendez-vous</a>
           </div>
           ${prixLigne ? `<p>${prixLigne}</p>` : ''}
           <p>N'hésitez pas à me contacter si vous avez des questions avant la visite.</p>
@@ -93,7 +95,9 @@ Gabriel Brun`;
   const mailOptions = {
     from: process.env.EMAIL_FROM,
     to: candidature.email,
-    subject: 'Visite appartement T3 Raismes — Prise de rendez-vous en ligne',
+    subject: listing.type
+      ? `Visite appartement ${listing.type} Raismes — Prise de rendez-vous en ligne`
+      : 'Visite appartement Raismes — Prise de rendez-vous en ligne',
     text: emailText,
     html: emailHtml,
   };

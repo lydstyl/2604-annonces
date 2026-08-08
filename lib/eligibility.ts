@@ -1,14 +1,23 @@
-// Logique métier d'éligibilité à l'auto-email RDV (annonce raismes-t3).
+// Logique métier d'éligibilité à l'auto-email RDV.
 // Fonctions pures, testables sans environnement (vitest).
+// Les seuils sont calculés depuis le loyer charges comprises de chaque annonce.
 
-// Loyer CC du T3 Raismes : 630 € + 35 € charges = 665 €/mois
+// Loyer CC du T3 Raismes : 630 € + 35 € charges = 665 €/mois (référence historique)
 export const LOYER_CC_T3 = 665;
 
-// Seuil GLI : loyer CC ≤ 33% des revenus nets mensuels → revenus ≥ 665 / 0.33 ≈ 2 015,15 → arrondi 2 016
-export const GLI_MIN_REVENUS = Math.ceil(LOYER_CC_T3 / 0.33); // 2016
+// Seuil GLI : loyer CC ≤ 33% des revenus nets mensuels → revenus ≥ loyerCC / 0.33
+export const GLI_MIN_REVENUS = Math.ceil(LOYER_CC_T3 / 0.33); // 2016 pour le T3
 
 // Seuil alternative garantie Visale : ~3× le loyer CC
-export const VISALE_MIN_REVENUS = LOYER_CC_T3 * 3; // 1995
+export const VISALE_MIN_REVENUS = LOYER_CC_T3 * 3; // 1995 pour le T3
+
+// Calcule les seuils d'éligibilité pour une annonce donnée (depuis son loyer CC)
+export function computeThresholds(loyerCC: number) {
+  return {
+    gliMinRevenus: Math.ceil(loyerCC / 0.33),
+    visaleMinRevenus: loyerCC * 3,
+  };
+}
 
 export interface VisitRdvEligibilityInput {
   cdiPlus3Mois?: boolean;
@@ -21,10 +30,12 @@ export interface VisitRdvEligibilityInput {
  * Un candidat reçoit l'auto-email de prise de RDV visite si :
  * - garantie Visale (Action Logement) détenue → éligible immédiatement (sans autre condition), OU
  * - CDI > 3 mois (hors période d'essai) ET
- *   (revenus >= 2 016 € (seuil GLI 33%) OU
- *    (revenus >= 1 995 € (3× loyer) ET garant/Visale fourni))
+ *   (revenus >= seuil GLI 33% OU
+ *    (revenus >= 3× loyer ET garant/Visale fourni))
+ *
+ * @param loyerCC loyer charges comprises de l'annonce (ex: 665 pour le T3, 550 pour appt5)
  */
-export function isEligibleVisitRdv(input: VisitRdvEligibilityInput): boolean {
+export function isEligibleVisitRdv(input: VisitRdvEligibilityInput, loyerCC: number): boolean {
   if (input.garantieVisale === true) return true;
 
   if (!input.cdiPlus3Mois) return false;
@@ -32,6 +43,7 @@ export function isEligibleVisitRdv(input: VisitRdvEligibilityInput): boolean {
   const revenus = input.revenusMenuels;
   if (typeof revenus !== 'number' || !Number.isFinite(revenus)) return false;
 
-  if (revenus >= GLI_MIN_REVENUS) return true;
-  return revenus >= VISALE_MIN_REVENUS && input.peutFournirGarant === true;
+  const { gliMinRevenus, visaleMinRevenus } = computeThresholds(loyerCC);
+  if (revenus >= gliMinRevenus) return true;
+  return revenus >= visaleMinRevenus && input.peutFournirGarant === true;
 }

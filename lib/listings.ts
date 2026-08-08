@@ -1,6 +1,7 @@
 // Types pour les annonces immobilières
 export interface Listing {
   id: string
+  type?: string // ex: 'T2', 'T3' — utilisé dans les emails
   title: string
   description: string
   images: string[]
@@ -8,6 +9,7 @@ export interface Listing {
   location: string
   address: string // Adresse complète pour Google Maps
   mapEmbedUrl?: string // URL iframe Google Maps personnalisée (optionnel)
+  calendarUrl?: string // Lien agenda Google de prise de RDV (défaut : agenda T3)
   price: {
     rent: number
     charges: number
@@ -27,6 +29,7 @@ export interface Listing {
 export const listings: Record<string, Listing> = {
   'raismes-t3': {
     id: 'raismes-t3',
+    type: 'T3',
     title: 'Spacieux T3 de 85 m² – Raismes Centre – Disponible fin juin 2026',
     description: `📍 Situé en plein centre de Raismes, proche de toutes commodités (commerces, gare, bus, centre commercial de Petite Forêt).`,
     images: [
@@ -194,31 +197,95 @@ export const listings: Record<string, Listing> = {
       }
     ]
   },
-  // Annonce vierge — en attente de contenu (photos, FAQ, prix définitif)
+  // T2 n°5 – 32 B rue Henri Durre, Raismes (SCI LOGIS ANGE)
   'appt5': {
     id: 'appt5',
-    title: 'T2 au 32 B rue Henri Durre, 59590 Raismes (annonce en cours de préparation)',
-    description:
-      'Appartement T2 situé au 32 B rue Henri Durre, 59590 Raismes. Description complète à venir.',
-    images: [], // photos à ajouter
+    type: 'T2',
+    title: 'T2 lumineux de 57 m² – Raismes Centre – Disponible fin octobre 2026',
+    description: `📍 Situé au 32 B rue Henri Durre, en plein centre de Raismes, proche de toutes commodités (commerces, gare, bus, centre commercial de Petite Forêt).`,
+    images: [], // photos à ajouter (Gabriel fournira)
     location: 'Raismes',
     address: '32 B rue Henri Durre, 59590 Raismes, France',
     price: {
-      rent: 0, // prix à définir
-      charges: 0, // prix à définir
-      deposit: 0, // prix à définir
+      rent: 500,
+      charges: 50,
+      deposit: 500,
     },
     features: [
-      'Appartement T2',
-      '32 B rue Henri Durre, 59590 Raismes',
+      'Appartement T2 lumineux de 57 m²',
+      'Cuisine équipée (9 caissons, évier, plaques de cuisson, hotte)',
+      'Salon spacieux',
+      '1 chambre confortable',
+      "Salle d'eau avec douche et WC",
+      'Chauffage individuel au gaz (économique)',
+      'Fenêtres PVC double vitrage',
+      'Stationnement facile et gratuit dans la rue',
+      "Magasin de fruits et légumes au pied de l'immeuble, centre commercial Petite Forêt à 6 min",
+      'Gare et stations de bus à proximité',
     ],
     conditions: [
       'Revenus nets ≥ 3 × le loyer charges comprises',
       "Au moins 1 CDI dans le foyer (hors période d'essai)",
       'Dossier complet demandé',
     ],
-    availableFrom: 'à définir',
-    faq: [], // FAQ à rédiger
+    availableFrom: 'fin octobre 2026',
+    faq: [
+      {
+        question: 'Quelles sont les conditions pour obtenir ce logement ?',
+        answer:
+          "Voici les conditions d'acceptation de votre dossier, telles qu'exigées par l'assurance Garantie Loyers Impayés (GLI) :\n\n**✅ Critères de solvabilité**\n• **Revenus** : le loyer charges comprises (550 €/mois) doit représenter au maximum 33 % de vos revenus nets mensuels, soit des revenus d'au moins **~1 667 €/mois**\n• **Situation professionnelle** : CDI hors période d'essai ou fonctionnaire (un CDD avec au moins 12 mois restants peut être accepté si le taux d'effort est ≤ 25 %)\n• **Allocations CAF** : prises en compte à hauteur de 50 % maximum\n• **Exclusions** : demandeur d'emploi ou bénéficiaire du RSA exclu\n\n**📄 Dossier complet à fournir**\n1. Pièce d'identité (CNI ou passeport)\n2. 3 derniers bulletins de salaire\n3. Contrat de travail\n4. Dernier avis d'imposition\n5. Justificatif de domicile actuel\n6. RIB\n\n**💡 Alternative : garantie Visale**\nSi vos revenus sont inférieurs au seuil GLI, la garantie Visale (caution gratuite d'Action Logement) peut être acceptée en alternative. Les revenus doivent alors atteindre environ **3× le loyer, soit 1 650 €/mois**.",
+      },
+      {
+        question: 'Quand puis-je visiter le logement ?',
+        answer:
+          'Les visites sont organisées sur rendez-vous. Après avoir soumis votre candidature, nous vous contacterons pour organiser une visite si votre profil correspond aux critères.',
+      },
+      {
+        question: 'Quels documents dois-je fournir pour le dossier ?',
+        answer:
+          "Vous devrez fournir : pièce d'identité, 3 derniers bulletins de salaire, contrat de travail, avis d'imposition, justificatif de domicile actuel, et RIB.",
+      },
+      {
+        question: "Quel est le DPE (Diagnostic de Performance Énergétique) de ce logement ?",
+        answer:
+          "Le DPE a été établi le 14/11/2024 (valable jusqu'au 13/11/2034). La consommation énergétique estimée est d'environ 22 933 kWh/an, soit des coûts annuels d'énergie estimés entre **2 040 € et 2 800 €/an** (étiquette énergétique F). Le chauffage est assuré par une chaudière individuelle au gaz.",
+      },
+      {
+        question: 'Quelles sont les superficies des pièces ?',
+        answer:
+          "Voici le détail des surfaces par pièce (loi Carrez) :\n\n• **Entrée** — 10,80 m²\n• **Séjour** — 16,56 m²\n• **Chambre** — 15,67 m²\n• **Cuisine** — 9,57 m²\n• **Salle de bain** — 4,79 m²\n\nSoit **57,39 m²** au total (surface Carrez), pour 71,39 m² de surface au sol.",
+      },
+      {
+        question: 'Y a-t-il une baignoire ?',
+        answer:
+          "Non, il n'y a pas de baignoire, mais il y a une douche dans la salle de bain.",
+      },
+      {
+        question: 'Les animaux sont-ils acceptés ?',
+        answer:
+          "Par principe, les animaux de compagnie ne sont pas acceptés. Toutefois, le propriétaire reste ouvert à la discussion au cas par cas : les chats sont par exemple acceptés. L'accord dépendra de la nature de l'animal et de la solidité de votre dossier.",
+      },
+      {
+        question: 'Y a-t-il un parking ?',
+        answer:
+          "Le stationnement est facile et gratuit dans la rue à proximité immédiate de l'appartement.",
+      },
+      {
+        question: 'Les charges incluent quoi ?',
+        answer:
+          "Les charges de 50 €/mois couvrent : l'eau froide dans le logement (basée sur la consommation moyenne d'une personne, ajustable si vous êtes plus), l'entretien des parties communes (femme de ménage + électricité), et la taxe d'ordures ménagères. L'électricité et le gaz restent à la charge du locataire.",
+      },
+      {
+        question: 'Quel est le montant minimum de revenus requis ?',
+        answer:
+          'Vos revenus nets mensuels doivent être au moins égaux à 3 fois le loyer charges comprises, soit 1 650 €/mois (550 € × 3). Si vos revenus sont inférieurs, un garant solvable peut compenser.',
+      },
+      {
+        question: 'Le garant est-il obligatoire ?',
+        answer:
+          "Le garant n'est pas obligatoire si vos revenus atteignent au moins 3 fois le loyer charges comprises (1 650 €/mois). En revanche, si vos revenus sont inférieurs à ce seuil, un garant est fortement recommandé pour que votre dossier puisse être accepté.",
+      },
+    ],
   }
 }
 

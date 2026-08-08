@@ -78,12 +78,16 @@ export async function POST(
     // revenus ≥ seuil GLI, ou revenus ≥ 3× loyer avec garantie Visale), lui envoyer
     // le lien de réservation. L'email de notification ci-dessus part TOUJOURS, celui-ci est conditionnel.
     if (
-      isEligibleVisitRdv({
-        cdiPlus3Mois: candidature.cdiPlus3Mois,
-        revenusMenuels: candidature.revenusMenuels,
-        peutFournirGarant: candidature.peutFournirGarant,
-        garantieVisale: candidature.garantieVisale,
-      })
+      isEligibleVisitRdv(
+        {
+          cdiPlus3Mois: candidature.cdiPlus3Mois,
+          revenusMenuels: candidature.revenusMenuels,
+          peutFournirGarant: candidature.peutFournirGarant,
+          garantieVisale: candidature.garantieVisale,
+        },
+        // Loyer CC de l'annonce → seuils GLI/Visale dynamiques par annonce
+        listing.price.rent + listing.price.charges
+      )
     ) {
       try {
         await sendVisitRdvEmail(candidature, listing);
