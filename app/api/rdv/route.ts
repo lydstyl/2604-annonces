@@ -90,10 +90,13 @@ export async function POST(request: NextRequest) {
       console.error('Erreur lors de l\'envoi de l\'email de notification RDV:', emailError);
     }
 
-    // Redirection vers l'écran de confirmation de la page RDV
+    // Redirection vers l'écran de confirmation de la page RDV.
+    // Base ABSOLUE depuis NEXT_PUBLIC_SITE_URL (pas request.url qui, derrière
+    // Nginx, pointe vers l'URL interne localhost:3011 → lien cassé pour le candidat).
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://annonces.duckdns.org';
     const confirmationUrl = new URL(
       `/rdv/${listingId}?confirmed=1&start=${encodeURIComponent(result.rdv.start)}&prenom=${encodeURIComponent(prenom)}`,
-      request.url
+      siteUrl
     );
     return NextResponse.redirect(confirmationUrl, 303);
   } catch (error) {
