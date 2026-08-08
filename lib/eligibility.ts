@@ -14,15 +14,19 @@ export interface VisitRdvEligibilityInput {
   cdiPlus3Mois?: boolean;
   revenusMenuels: number;
   peutFournirGarant: boolean;
+  garantieVisale?: boolean;
 }
 
 /**
  * Un candidat reçoit l'auto-email de prise de RDV visite si :
+ * - garantie Visale (Action Logement) détenue → éligible immédiatement (sans autre condition), OU
  * - CDI > 3 mois (hors période d'essai) ET
  *   (revenus >= 2 016 € (seuil GLI 33%) OU
  *    (revenus >= 1 995 € (3× loyer) ET garant/Visale fourni))
  */
 export function isEligibleVisitRdv(input: VisitRdvEligibilityInput): boolean {
+  if (input.garantieVisale === true) return true;
+
   if (!input.cdiPlus3Mois) return false;
 
   const revenus = input.revenusMenuels;

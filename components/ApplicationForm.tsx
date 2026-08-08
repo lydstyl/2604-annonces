@@ -21,6 +21,7 @@ export default function ApplicationForm({ listingId, listingTitle }: Application
     revenusMenuels: '',
     peutFournirGarant: false,
     cdiPlus3Mois: false,
+    garantieVisale: false,
     dateAmenagement: '',
     remarques: '',
   });
@@ -185,6 +186,20 @@ export default function ApplicationForm({ listingId, listingTitle }: Application
             />
             <label htmlFor="peutFournirGarant" className="ml-3 text-gray-700">
               Je peux fournir un garant ou une garantie
+            </label>
+          </div>
+
+          <div className="flex items-start">
+            <input
+              type="checkbox"
+              id="garantieVisale"
+              name="garantieVisale"
+              checked={formData.garantieVisale}
+              onChange={handleChange}
+              className="mt-1 h-5 w-5 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
+            />
+            <label htmlFor="garantieVisale" className="ml-3 text-gray-700">
+              J&apos;ai droit à la garantie Visale (Action Logement)
             </label>
           </div>
         </div>

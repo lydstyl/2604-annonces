@@ -112,13 +112,14 @@ export async function appendCandidatureToSheet(candidature: Candidature): Promis
       candidature.email,
       formatFrenchDate(candidature.dateSubmission),
       candidature.remarques || '',
+      boolToOuiNon(candidature.garantieVisale), // colonne K — garantie Visale (Action Logement)
     ];
 
     // 5. Écrire la ligne
     const nextRowIndex = rows.length + 1; // header + existing data + 1
     await sheets.spreadsheets.values.update({
       spreadsheetId: SPREADSHEET_ID,
-      range: `'Admin'!A${nextRowIndex}:J${nextRowIndex}`,
+      range: `'Admin'!A${nextRowIndex}:K${nextRowIndex}`,
       valueInputOption: 'USER_ENTERED',
       requestBody: { values: [newRow] },
     });

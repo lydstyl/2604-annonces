@@ -14,7 +14,7 @@ export async function POST(
     const body = await request.json();
 
     // Validation des champs requis
-    const { nom, prenom, telephone, email, revenusMenuels, peutFournirGarant, cdiPlus3Mois, dateAmenagement, remarques } = body;
+    const { nom, prenom, telephone, email, revenusMenuels, peutFournirGarant, cdiPlus3Mois, garantieVisale, dateAmenagement, remarques } = body;
 
     if (!nom || !prenom || !telephone || !email || revenusMenuels === undefined) {
       return NextResponse.json(
@@ -60,6 +60,7 @@ export async function POST(
       revenusMenuels: revenusNumber,
       peutFournirGarant: !!peutFournirGarant,
       cdiPlus3Mois: !!cdiPlus3Mois,
+      garantieVisale: !!garantieVisale,
       dateAmenagement: dateAmenagement || '',
       remarques: remarques?.trim() || '',
     });
@@ -73,14 +74,15 @@ export async function POST(
       // On continue même si l'email échoue (la candidature est déjà sauvegardée)
     }
 
-    // Auto-email RDV : si le candidat est éligible (CDI > 3 mois + revenus ≥ seuil GLI
-    // ou revenus ≥ 3× loyer avec garantie Visale), lui envoyer le lien de réservation.
-    // L'email de notification ci-dessus part TOUJOURS, celui-ci est conditionnel.
+    // Auto-email RDV : si le candidat est éligible (garantie Visale, ou CDI > 3 mois +
+    // revenus ≥ seuil GLI, ou revenus ≥ 3× loyer avec garantie Visale), lui envoyer
+    // le lien de réservation. L'email de notification ci-dessus part TOUJOURS, celui-ci est conditionnel.
     if (
       isEligibleVisitRdv({
         cdiPlus3Mois: candidature.cdiPlus3Mois,
         revenusMenuels: candidature.revenusMenuels,
         peutFournirGarant: candidature.peutFournirGarant,
+        garantieVisale: candidature.garantieVisale,
       })
     ) {
       try {
