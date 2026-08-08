@@ -31,6 +31,7 @@ export interface Rdv {
   telephone: string;
   email: string;
   createdAt: string; // ISO UTC
+  googleEventId?: string; // id de l'événement Google Calendar « Visites » (sync phase 2)
 }
 
 // Entrée de réservation (la durée vient de la config de l'annonce)
@@ -112,6 +113,26 @@ export async function bookRdv(input: RdvBookingInput, filePath: string = RDVS_FI
     rdvs.push(rdv);
     await fs.writeFile(filePath, JSON.stringify(rdvs, null, 2), 'utf-8');
     return { ok: true as const, rdv };
+  });
+}
+
+// Mise à jour atomique d'un RDV (ex: persistance de googleEventId après sync
+// Google Calendar). Retourne le RDV mis à jour, ou null si l'id n'existe pas.
+export async function updateRdv(
+  id: string,
+  patch: Partial<Rdv>,
+  filePath: string = RDVS_FILE
+): Promise<Rdv | null> {
+  return enqueue(async () => {
+    await ensureDir(filePath);
+    const rdvs = await getRdvs(filePath);
+    const index = rdvs.findIndex((r) => r.id === id);
+    if (index === -1) {
+      return null;
+    }
+    rdvs[index] = { ...rdvs[index], ...patch };
+    await fs.writeFile(filePath, JSON.stringify(rdvs, null, 2), 'utf-8');
+    return rdvs[index];
   });
 }
 

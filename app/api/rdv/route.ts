@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getListingById } from '@/lib/listings';
-import { getRdvs, isSlotAvailable, bookRdv } from '@/lib/rdv';
+import { getRdvs, isSlotAvailable, bookRdv, updateRdv } from '@/lib/rdv';
 import { sendRdvConfirmationEmail, sendRdvNotificationEmail } from '@/lib/email';
+import { syncRdvToCalendar } from '@/lib/calendar';
 
 export async function POST(request: NextRequest) {
   try {
@@ -88,6 +89,19 @@ export async function POST(request: NextRequest) {
       await sendRdvNotificationEmail(result.rdv, listing);
     } catch (emailError) {
       console.error('Erreur lors de l\'envoi de l\'email de notification RDV:', emailError);
+    }
+
+    // Sync Google Calendar (calendrier « Visites ») : NON BLOQUANTE.
+    // Une erreur Google ne fait pas échouer la réservation (déjà persistée),
+    // exactement comme le pattern des emails ci-dessus. Si l'événement est
+    // créé, on persiste son id (googleEventId) pour garantir l'idempotence.
+    try {
+      const eventId = await syncRdvToCalendar(result.rdv, listing);
+      if (eventId && !result.rdv.googleEventId) {
+        await updateRdv(result.rdv.id, { googleEventId: eventId });
+      }
+    } catch (calendarError) {
+      console.error('Erreur lors de la création de l\'événement Google Calendar (réservation conservée):', calendarError);
     }
 
     // Redirection vers l'écran de confirmation de la page RDV.
