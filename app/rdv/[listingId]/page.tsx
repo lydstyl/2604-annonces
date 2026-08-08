@@ -19,7 +19,10 @@ export async function generateStaticParams() {
     }));
 }
 
-export const dynamic = 'force-static';
+// Rendu à la requête (pas statique) : les searchParams (écran de confirmation)
+// et la liste des créneaux disponibles doivent refléter l'état en temps réel
+// (réservations déjà prises), pas l'état figé au moment du build.
+export const dynamic = 'force-dynamic';
 
 type RdvPageParams = { params: Promise<{ listingId: string }> };
 type RdvPageSearchParams = {
