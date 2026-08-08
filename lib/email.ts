@@ -1,6 +1,8 @@
 import nodemailer from 'nodemailer';
 import type { Candidature } from './storage';
 import type { Listing } from './listings';
+import type { Rdv } from './rdv';
+import { formatRdvDateTime } from './rdv';
 
 // Lien calendrier de réservation de visite (défaut : agenda T3)
 export const VISIT_CALENDAR_URL = 'https://calendar.app.google/DQPx7dskXd7bY6bq8';
@@ -25,7 +27,12 @@ export async function sendVisitRdvEmail(candidature: Candidature, listing: Listi
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://annonces.duckdns.org';
   const annonceUrl = `${siteUrl}/annonce/${listing.id}`;
+  // Si l'annonce a une config RDV intégrée, on pointe vers la page de réservation
+  // interne ; sinon fallback sur le calendrier Google (comportement T3 inchangé).
+  const rdvBookingUrl = listing.rdv ? `${siteUrl}/rdv/${listing.id}` : null;
   const calendarUrl = listing.calendarUrl || VISIT_CALENDAR_URL;
+  const bookingUrl = rdvBookingUrl || calendarUrl;
+  const bookingCtaLabel = rdvBookingUrl ? 'Réserver un créneau de visite' : 'Prendre rendez-vous';
   const logementLabel = listing.type ? `l'appartement ${listing.type} situé à Raismes` : 'le logement situé à Raismes';
 
   const prixLigne =
@@ -42,7 +49,7 @@ Je reviens vers vous suite à votre candidature pour ${logementLabel}.
 Votre profil correspond à ce que je recherche, je vous propose donc de visiter le logement.
 
 Vous pouvez directement réserver un créneau de visite à votre convenance via le lien ci-dessous :
-👉 Prendre rendez-vous : ${calendarUrl}
+👉 ${bookingCtaLabel} : ${bookingUrl}
 
 ${prixLigne}
 
@@ -78,7 +85,7 @@ Gabriel Brun`;
           <p>Votre profil correspond à ce que je recherche, je vous propose donc de visiter le logement.</p>
           <p>Vous pouvez directement réserver un créneau de visite à votre convenance via le lien ci-dessous :</p>
           <div class="cta">
-            <a href="${calendarUrl}">📅 Prendre rendez-vous</a>
+            <a href="${bookingUrl}">📅 ${bookingCtaLabel}</a>
           </div>
           ${prixLigne ? `<p>${prixLigne}</p>` : ''}
           <p>N'hésitez pas à me contacter si vous avez des questions avant la visite.</p>
@@ -108,6 +115,180 @@ Gabriel Brun`;
   } catch (error) {
     console.error('Error sending visit RDV email:', error);
     throw new Error('Erreur lors de l\'envoi de l\'email de rendez-vous');
+  }
+}
+
+// Email de confirmation de RDV au candidat, avec la date et l'heure du créneau
+export async function sendRdvConfirmationEmail(rdv: Rdv, listing: Listing) {
+  const transporter = createTransporter();
+
+  const logementLabel = listing.type ? `l'appartement ${listing.type} situé à Raismes` : 'le logement situé à Raismes';
+  const timezone = listing.rdv?.timezone ?? 'Europe/Paris';
+  const rdvDateTime = formatRdvDateTime(rdv.start, timezone);
+
+  const emailText = `Bonjour ${rdv.prenom},
+
+Votre visite pour ${logementLabel} est bien confirmée.
+
+📅 Créneau réservé : ${rdvDateTime}
+📍 Adresse : ${listing.address}
+
+Votre visite durera 15 minutes. Si vous souhaitez modifier ou annuler ce rendez-vous, répondez simplement à cet email.
+
+À bientôt,
+Gabriel Brun`;
+
+  const emailHtml = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background-color: #0284c7; color: white; padding: 20px; text-align: center; }
+        .content { background-color: #f9f9f9; padding: 20px; }
+        .rdv-box { background-color: #e0f2fe; border: 1px solid #7dd3fc; border-radius: 8px; padding: 16px; margin: 16px 0; }
+        .footer { margin-top: 20px; padding: 20px; text-align: center; font-size: 12px; color: #777; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <h1>✅ Visite confirmée</h1>
+        </div>
+        <div class="content">
+          <p>Bonjour ${rdv.prenom},</p>
+          <p>Votre visite pour ${logementLabel} est bien confirmée.</p>
+          <div class="rdv-box">
+            <p><strong>📅 Créneau réservé :</strong> ${rdvDateTime}</p>
+            <p><strong>📍 Adresse :</strong> ${listing.address}</p>
+            <p><strong>⏱️ Durée :</strong> 15 minutes</p>
+          </div>
+          <p>Si vous souhaitez modifier ou annuler ce rendez-vous, répondez simplement à cet email.</p>
+          <p>À bientôt,<br/>Gabriel Brun</p>
+        </div>
+        <div class="footer">
+          <p>Cet email a été généré automatiquement suite à votre réservation de visite.</p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+
+  const mailOptions = {
+    from: process.env.EMAIL_FROM,
+    to: rdv.email,
+    subject: `Confirmation de visite ${listing.type ? listing.type : 'appartement'} Raismes — ${rdvDateTime}`,
+    text: emailText,
+    html: emailHtml,
+  };
+
+  try {
+    await transporter.sendMail(mailOptions);
+    console.log('RDV confirmation email sent successfully');
+  } catch (error) {
+    console.error('Error sending RDV confirmation email:', error);
+    throw new Error('Erreur lors de l\'envoi de l\'email de confirmation de RDV');
+  }
+}
+
+// Email de notification à Gabriel (EMAIL_TO) : coordonnées candidat + créneau
+export async function sendRdvNotificationEmail(rdv: Rdv, listing: Listing) {
+  const transporter = createTransporter();
+
+  const timezone = listing.rdv?.timezone ?? 'Europe/Paris';
+  const rdvDateTime = formatRdvDateTime(rdv.start, timezone);
+
+  const emailText = `
+Nouveau RDV de visite réservé :
+
+Annonce : ${listing.title}
+Créneau : ${rdvDateTime}
+Adresse de visite : ${listing.address}
+
+Candidat :
+Nom : ${rdv.nom}
+Prénom : ${rdv.prenom}
+Téléphone : ${rdv.telephone}
+Email : ${rdv.email}
+
+ID du RDV : ${rdv.id}
+  `;
+
+  const emailHtml = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background-color: #0284c7; color: white; padding: 20px; text-align: center; }
+        .content { background-color: #f9f9f9; padding: 20px; }
+        .field { margin-bottom: 15px; }
+        .label { font-weight: bold; color: #555; }
+        .value { color: #333; }
+        .rdv-box { background-color: #e0f2fe; border: 1px solid #7dd3fc; border-radius: 8px; padding: 16px; margin: 16px 0; }
+        .footer { margin-top: 20px; padding: 20px; text-align: center; font-size: 12px; color: #777; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <h1>📅 Nouveau RDV de visite</h1>
+        </div>
+        <div class="content">
+          <p><strong>Annonce :</strong> ${listing.title}</p>
+          <div class="rdv-box">
+            <p><strong>🕐 Créneau :</strong> ${rdvDateTime}</p>
+            <p><strong>📍 Adresse de visite :</strong> ${listing.address}</p>
+          </div>
+          <hr>
+          <div class="field">
+            <div class="label">Nom :</div>
+            <div class="value">${rdv.nom}</div>
+          </div>
+          <div class="field">
+            <div class="label">Prénom :</div>
+            <div class="value">${rdv.prenom}</div>
+          </div>
+          <div class="field">
+            <div class="label">Téléphone :</div>
+            <div class="value">${rdv.telephone}</div>
+          </div>
+          <div class="field">
+            <div class="label">Email :</div>
+            <div class="value">${rdv.email}</div>
+          </div>
+          <hr>
+          <div class="field">
+            <div class="label">ID du RDV :</div>
+            <div class="value">${rdv.id}</div>
+          </div>
+        </div>
+        <div class="footer">
+          <p>Cette notification a été générée automatiquement par le système de gestion des annonces immobilières.</p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+
+  const mailOptions = {
+    from: process.env.EMAIL_FROM,
+    to: process.env.EMAIL_TO || 'lydstyl@gmail.com',
+    subject: `Nouveau RDV visite - ${rdv.prenom} ${rdv.nom} - ${listing.title}`,
+    text: emailText,
+    html: emailHtml,
+  };
+
+  try {
+    await transporter.sendMail(mailOptions);
+    console.log('RDV notification email sent successfully');
+  } catch (error) {
+    console.error('Error sending RDV notification email:', error);
+    throw new Error('Erreur lors de l\'envoi de l\'email de notification de RDV');
   }
 }
 

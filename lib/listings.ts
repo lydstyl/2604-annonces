@@ -1,3 +1,5 @@
+import type { RdvConfig } from './rdv';
+
 // Types pour les annonces immobilières
 export interface Listing {
   id: string
@@ -11,6 +13,7 @@ export interface Listing {
   address: string // Adresse complète pour Google Maps
   mapEmbedUrl?: string // URL iframe Google Maps personnalisée (optionnel)
   calendarUrl?: string // Lien agenda Google de prise de RDV (défaut : agenda T3)
+  rdv?: RdvConfig // Config de créneaux de visite intégrée (module RDV) — si présente, remplace le calendrier Google
   price: {
     rent: number
     charges: number
@@ -226,6 +229,17 @@ export const listings: Record<string, Listing> = {
     videoId: '_YqCHD4vFo8',
     location: 'Raismes',
     address: '32 B rue Henri Durre, 59590 Raismes, France',
+    // Module RDV visite intégré : créneaux de 15 min, lundi à vendredi 18h30→19h30,
+    // réservation de J+1 à J+21 (heure Europe/Paris)
+    rdv: {
+      durationMinutes: 15,
+      days: [1, 2, 3, 4, 5],
+      startTime: '18:30',
+      endTime: '19:30',
+      minLeadDays: 1,
+      maxLeadDays: 21,
+      timezone: 'Europe/Paris',
+    },
     price: {
       rent: 500,
       charges: 50,
