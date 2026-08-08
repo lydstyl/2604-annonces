@@ -7,6 +7,9 @@ services:
     env_file:
       - .env.local
     environment:
-      - PORT=3010
+      - PORT=3011
     volumes:
       - ./data:/app/data
+      # Token Google (lib/sheets.ts + lib/calendar.ts lisent os.homedir()/.hermes/google_token.json
+      # → /root dans le conteneur node:22-slim). Monté en lecture seule.
+      - ~/.hermes/google_token.json:/root/.hermes/google_token.json:ro
