@@ -45,8 +45,11 @@ npx tsc --noEmit     # type checking
 
 ```bash
 npm run build
-pm2 restart annonces-immobilier   # ⚠️ 2 process PM2 du même nom existent (id 2 et 3) — restart les deux ou par id
-curl -s http://localhost:3011/annonce/raismes-t3   # health check
+pm2 restart annonces-immobilier   # ⚠️ un seul process (id variable) — `next start -p 3011`
+# ⚠️ CRITIQUE : vérifier le proxy_pass du vhost Nginx annonces (/etc/nginx/sites-available/annonces)
+# doit pointer vers http://127.0.0.1:3011 (il a déjà pointé vers 3027 mort → 502 en prod, 08/08/2026)
+curl -s http://localhost:3011/annonce/raismes-t3                 # health check local
+curl -s -o /dev/null -w "%{http_code}" https://annonces.duckdns.org/rdv/appt5   # health check VIA LE DOMAINE (toujours)
 ```
 
 Ne JAMAIS commiter `data/*.json`, `data/*.bak`, `.env*` (dans .gitignore). Ne pas merger vers main : push branche feature uniquement.
