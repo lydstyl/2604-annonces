@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import { getListingById } from '@/lib/listings';
+import { getListingById, getAllListings } from '@/lib/listings';
 import {
   getRdvs,
   getAvailableSlots,
@@ -9,7 +9,19 @@ import {
   type RdvSlot,
 } from '@/lib/rdv';
 
-type RdvPageParams = { params: Promise<{ id: string }> };
+// Génération statique des pages pour toutes les annonces disposant d'une config RDV
+export async function generateStaticParams() {
+  const listings = getAllListings();
+  return listings
+    .filter((l) => l.rdv)
+    .map((listing) => ({
+      listingId: listing.id,
+    }));
+}
+
+export const dynamic = 'force-static';
+
+type RdvPageParams = { params: Promise<{ listingId: string }> };
 type RdvPageSearchParams = {
   searchParams: Promise<{ confirmed?: string; start?: string; prenom?: string }>;
 };
@@ -92,7 +104,7 @@ function ConfirmationScreen({
           </div>
 
           <Link href={`/annonce/${listingId}`} className="inline-block btn-primary">
-            Retour à l'annonce
+            Retour à l&apos;annonce
           </Link>
         </div>
       </div>
@@ -101,9 +113,9 @@ function ConfirmationScreen({
 }
 
 export default async function RdvPage({ params, searchParams }: RdvPageParams & RdvPageSearchParams) {
-  const { id } = await params;
+  const { listingId } = await params;
   const { confirmed, start, prenom } = await searchParams;
-  const listing = getListingById(id);
+  const listing = getListingById(listingId);
 
   if (!listing || !listing.rdv) {
     notFound();
@@ -113,10 +125,10 @@ export default async function RdvPage({ params, searchParams }: RdvPageParams & 
 
   // Écran de confirmation après réservation réussie (POST /api/rdv → redirect)
   if (confirmed === '1' && start) {
-    return <ConfirmationScreen listingId={id} start={start} prenom={prenom || ''} />;
+    return <ConfirmationScreen listingId={listingId} start={start} prenom={prenom || ''} />;
   }
 
-  const existingRdvs = (await getRdvs()).filter((r) => r.listingId === id);
+  const existingRdvs = (await getRdvs()).filter((r) => r.listingId === listingId);
   const today = getTodayInTimeZone(timezone);
   const availableDates = getAvailableSlots(listing.rdv, today, existingRdvs);
 
@@ -155,7 +167,7 @@ export default async function RdvPage({ params, searchParams }: RdvPageParams & 
 
         {/* Formulaire de réservation */}
         <form method="POST" action="/api/rdv" className="card p-6 mb-8">
-          <input type="hidden" name="listingId" value={id} />
+          <input type="hidden" name="listingId" value={listingId} />
 
           {/* Coordonnées */}
           <div className="mb-6">
