@@ -3,6 +3,7 @@ export interface Listing {
   id: string
   type?: string // ex: 'T2', 'T3' — utilisé dans les emails
   title: string
+  surface: number // surface habitable en m²
   description: string
   images: string[]
   videoId?: string
@@ -31,6 +32,7 @@ export const listings: Record<string, Listing> = {
     id: 'raismes-t3',
     type: 'T3',
     title: 'Spacieux T3 de 85 m² – Raismes Centre – Disponible fin juin 2026',
+    surface: 85,
     description: `📍 Situé en plein centre de Raismes, proche de toutes commodités (commerces, gare, bus, centre commercial de Petite Forêt).`,
     images: [
       '/images/2026-04-T3/PXL_20260415_145614796_832.jpg',
@@ -202,6 +204,7 @@ export const listings: Record<string, Listing> = {
     id: 'appt5',
     type: 'T2',
     title: 'T2 lumineux de 57 m² – Raismes Centre – Disponible fin octobre 2026',
+    surface: 57,
     description: `📍 Situé au 32 B rue Henri Durre, en plein centre de Raismes, proche de toutes commodités (commerces, gare, bus, centre commercial de Petite Forêt).`,
     images: [], // photos à ajouter (Gabriel fournira)
     location: 'Raismes',
@@ -297,4 +300,30 @@ export function getListingById(id: string): Listing | undefined {
 // Fonction pour récupérer toutes les annonces
 export function getAllListings(): Listing[] {
   return Object.values(listings)
+}
+
+// Carte affichée sur la home page
+export interface ListingCard {
+  id: string
+  href: string
+  type: string
+  title: string
+  surface: number
+  rentChargesComprises: number
+  location: string
+  coverImage: string | null // null si aucune photo dispo
+}
+
+// Projette les annonces en cartes pour la home page
+export function getListingCards(): ListingCard[] {
+  return getAllListings().map((listing) => ({
+    id: listing.id,
+    href: `/annonce/${listing.id}`,
+    type: listing.type ?? 'Logement',
+    title: listing.title,
+    surface: listing.surface,
+    rentChargesComprises: listing.price.rent + listing.price.charges,
+    location: listing.location,
+    coverImage: listing.images.length > 0 ? listing.images[0] : null,
+  }))
 }
