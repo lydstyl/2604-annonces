@@ -285,7 +285,10 @@ ID du RDV : ${rdv.id}
 
   const mailOptions = {
     from: process.env.EMAIL_FROM,
-    to: process.env.EMAIL_TO || 'lydstyl@gmail.com',
+    // Destinataires : Gabriel (EMAIL_TO) + l'email du locataire qui réalise les visites (rdvHost) si renseigné — dédupliqués
+    to: Array.from(
+      new Set([process.env.EMAIL_TO || 'lydstyl@gmail.com', ...(listing.rdvHost?.email ? [listing.rdvHost.email] : [])])
+    ),
     subject: `Nouveau RDV visite - ${rdv.prenom} ${rdv.nom} - ${listing.title}`,
     text: emailText,
     html: emailHtml,

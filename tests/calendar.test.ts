@@ -12,6 +12,7 @@ import { updateRdv, type Rdv } from '../lib/rdv';
 import { getListingById } from '../lib/listings';
 
 const appt5 = getListingById('appt5')!;
+const raismesT3 = getListingById('raismes-t3')!;
 
 // ===== Helpers =====
 
@@ -110,6 +111,20 @@ describe('buildEventPayload — construction du payload Google Calendar', () => 
     const payload = buildEventPayload(makeRdv(), appt5);
     expect(payload.reminders.useDefault).toBe(false);
     expect(payload.reminders.overrides).toEqual([{ method: 'popup', minutes: 1440 }]);
+  });
+
+  it('ajoute le téléphone de M. Janot (rdvHost) en dernière ligne de la description pour appt5', () => {
+    const payload = buildEventPayload(makeRdv(), appt5);
+    expect(payload.description).toContain('Téléphone de M. Janot : 07 68 34 97 79');
+
+    const lines = payload.description.split('\n');
+    expect(lines[lines.length - 1]).toBe('Téléphone de M. Janot : 07 68 34 97 79');
+  });
+
+  it('laisse la description inchangée (pas de ligne Téléphone de) quand le listing n a pas de rdvHost', () => {
+    const payload = buildEventPayload(makeRdv(), raismesT3);
+    expect(payload.description).not.toContain('Téléphone de');
+    expect(payload.description.split('\n')).toHaveLength(3);
   });
 });
 

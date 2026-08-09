@@ -14,6 +14,7 @@ export interface Listing {
   mapEmbedUrl?: string // URL iframe Google Maps personnalisée (optionnel)
   calendarUrl?: string // Lien agenda Google de prise de RDV (défaut : agenda T3)
   rdv?: RdvConfig // Config de créneaux de visite intégrée (module RDV) — si présente, remplace le calendrier Google
+  rdvHost?: { name: string; phone: string; email?: string } // Locataire qui réalise les visites (coordonnées ajoutées à l'event calendar + notification email)
   price: {
     rent: number
     charges: number
@@ -239,6 +240,12 @@ export const listings: Record<string, Listing> = {
       minLeadDays: 1,
       maxLeadDays: 21,
       timezone: 'Europe/Paris',
+    },
+    // Locataire actuel qui réalise les visites de l'appartement
+    rdvHost: {
+      name: 'M. Janot',
+      phone: '07 68 34 97 79',
+      email: 'janot59590@gmail.com',
     },
     price: {
       rent: 500,
