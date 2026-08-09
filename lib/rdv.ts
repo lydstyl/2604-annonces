@@ -12,6 +12,8 @@ export interface RdvConfig {
   minLeadDays: number; // réservation possible à partir de J + minLeadDays
   maxLeadDays: number; // réservation possible jusqu'à J + maxLeadDays
   timezone: string; // IANA, ex: 'Europe/Paris'
+  availableFrom?: string; // Date calendaire (YYYY-MM-DD, fuseau config.timezone) à partir de laquelle
+  // les créneaux sont proposés — toute date strictement inférieure est exclue (bornes incluses)
 }
 
 // Un créneau disponible (bornes ISO UTC)
@@ -237,6 +239,10 @@ export function getAvailableSlots(
   for (let i = config.minLeadDays; i <= config.maxLeadDays; i++) {
     const date = new Date(Date.UTC(y, m - 1, d + i));
     const dateStr = `${date.getUTCFullYear()}-${pad(date.getUTCMonth() + 1)}-${pad(date.getUTCDate())}`;
+    // availableFrom : exclut toute date strictement inférieure (la date elle-même est incluse)
+    if (config.availableFrom && dateStr < config.availableFrom) {
+      continue;
+    }
     const slots = generateSlotsForDate(config, dateStr, existingRdvs);
     if (slots.length > 0) {
       results.push({ date: dateStr, slots });
@@ -257,6 +263,10 @@ export function isSlotAvailable(config: RdvConfig, startISO: string, existingRdv
     return false;
   }
   const dateStr = getDateInTimeZone(startISO, config.timezone);
+  // availableFrom : un créneau dont la date locale est strictement antérieure est indisponible
+  if (config.availableFrom && dateStr < config.availableFrom) {
+    return false;
+  }
   const validStarts = generateSlotsForDate(config, dateStr, []).map((s) => s.start);
   return validStarts.includes(startISO);
 }

@@ -58,10 +58,22 @@ describe('Config rdv de appt5 (T2 n°5)', () => {
     expect(appt5Config.minLeadDays).toBe(1);
     expect(appt5Config.maxLeadDays).toBe(21);
     expect(appt5Config.timezone).toBe('Europe/Paris');
+    expect(appt5Config.availableFrom).toBe('2026-08-17'); // pas de visite avant le 17 août 2026
   });
 
   it('raismes-t3 n a pas de config rdv (fallback Google Calendar inchangé)', () => {
     expect(getListingById('raismes-t3')!.rdv).toBeUndefined();
+  });
+
+  it('appt5 expose le rdvBailleur (name Gabriel, phone 07 81 15 45 03)', () => {
+    const listing = getListingById('appt5')!;
+    expect(listing.rdvBailleur).toBeDefined();
+    expect(listing.rdvBailleur!.name).toBe('Gabriel');
+    expect(listing.rdvBailleur!.phone).toBe('07 81 15 45 03');
+  });
+
+  it('raismes-t3 n a pas de rdvBailleur (inchangé)', () => {
+    expect(getListingById('raismes-t3')!.rdvBailleur).toBeUndefined();
   });
 });
 
@@ -110,8 +122,10 @@ describe('generateSlotsForDate — génération des créneaux', () => {
 
 describe('getAvailableSlots — prochaines dates avec créneaux', () => {
   it('respecte minLeadDays=1 : le premier jour proposé est au plus tôt le lendemain', () => {
+    // Sans availableFrom pour isoler la règle minLeadDays (la config appt5 bloque avant le 17/08)
+    const configSansBlocage = { ...appt5Config, availableFrom: undefined };
     // from = samedi 2026-08-08 → lendemain = dimanche 09 (pas de créneau) → lundi 10
-    const dates = getAvailableSlots(appt5Config, '2026-08-08', []);
+    const dates = getAvailableSlots(configSansBlocage, '2026-08-08', []);
     expect(dates.length).toBeGreaterThan(0);
     expect(dates[0].date).toBe('2026-08-10');
     expect(dates[0].slots).toHaveLength(4);
@@ -135,12 +149,13 @@ describe('getAvailableSlots — prochaines dates avec créneaux', () => {
   });
 
   it('exclut une date entièrement réservée', () => {
-    const taken = ['2026-08-10T16:30:00.000Z', '2026-08-10T16:45:00.000Z', '2026-08-10T17:00:00.000Z', '2026-08-10T17:15:00.000Z'].map(
+    // Réserve tous les créneaux du lundi 17 août (premier jour autorisé par availableFrom)
+    const taken = ['2026-08-17T16:30:00.000Z', '2026-08-17T16:45:00.000Z', '2026-08-17T17:00:00.000Z', '2026-08-17T17:15:00.000Z'].map(
       (start) => makeRdv({ start, end: new Date(new Date(start).getTime() + 15 * 60 * 1000).toISOString() })
     );
     const dates = getAvailableSlots(appt5Config, '2026-08-08', taken);
-    expect(dates.some((d) => d.date === '2026-08-10')).toBe(false);
-    expect(dates[0].date).toBe('2026-08-11'); // mardi
+    expect(dates.some((d) => d.date === '2026-08-17')).toBe(false);
+    expect(dates[0].date).toBe('2026-08-18'); // mardi
   });
 });
 
@@ -164,25 +179,67 @@ describe('hasOverlap — chevauchement', () => {
 
 describe('isSlotAvailable — vérification de dispo', () => {
   it('retourne true pour un créneau valide non pris', () => {
-    expect(isSlotAvailable(appt5Config, '2026-08-10T17:00:00.000Z', [])).toBe(true);
+    expect(isSlotAvailable(appt5Config, '2026-08-17T17:00:00.000Z', [])).toBe(true);
   });
 
   it('retourne false si le créneau est déjà pris', () => {
-    const rdvs = [makeRdv({ start: '2026-08-10T17:00:00.000Z', end: '2026-08-10T17:15:00.000Z' })];
-    expect(isSlotAvailable(appt5Config, '2026-08-10T17:00:00.000Z', rdvs)).toBe(false);
+    const rdvs = [makeRdv({ start: '2026-08-17T17:00:00.000Z', end: '2026-08-17T17:15:00.000Z' })];
+    expect(isSlotAvailable(appt5Config, '2026-08-17T17:00:00.000Z', rdvs)).toBe(false);
   });
 
   it('retourne false pour un horaire qui n est pas un début de créneau', () => {
-    expect(isSlotAvailable(appt5Config, '2026-08-10T16:37:00.000Z', [])).toBe(false);
+    expect(isSlotAvailable(appt5Config, '2026-08-17T16:37:00.000Z', [])).toBe(false);
   });
 
   it('retourne false hors plage horaire (avant 18h30 / après 19h30 Paris)', () => {
-    expect(isSlotAvailable(appt5Config, '2026-08-10T16:00:00.000Z', [])).toBe(false); // 18h00 Paris
-    expect(isSlotAvailable(appt5Config, '2026-08-10T18:00:00.000Z', [])).toBe(false); // 20h00 Paris
+    expect(isSlotAvailable(appt5Config, '2026-08-17T16:00:00.000Z', [])).toBe(false); // 18h00 Paris
+    expect(isSlotAvailable(appt5Config, '2026-08-17T18:00:00.000Z', [])).toBe(false); // 20h00 Paris
   });
 
   it('retourne false un samedi même à la bonne heure', () => {
-    expect(isSlotAvailable(appt5Config, '2026-08-08T16:30:00.000Z', [])).toBe(false); // samedi 18h30 Paris
+    expect(isSlotAvailable(appt5Config, '2026-08-22T16:30:00.000Z', [])).toBe(false); // samedi 22 août 18h30 Paris
+  });
+});
+
+describe('getAvailableSlots — availableFrom (blocage des dates antérieures)', () => {
+  it('exclut les dates strictement antérieures à availableFrom et commence à 2026-08-17', () => {
+    const dates = getAvailableSlots(appt5Config, '2026-08-08', []);
+    expect(dates.length).toBeGreaterThan(0);
+    for (const d of dates) {
+      expect(d.date >= '2026-08-17').toBe(true);
+    }
+    // vendredi 14 août < availableFrom → exclu
+    expect(dates.some((d) => d.date === '2026-08-14')).toBe(false);
+    expect(dates[0].date).toBe('2026-08-17');
+  });
+
+  it('inclut la date availableFrom elle-même', () => {
+    const dates = getAvailableSlots(appt5Config, '2026-08-08', []);
+    const d = dates.find((x) => x.date === '2026-08-17');
+    expect(d).toBeDefined();
+    expect(d!.slots).toHaveLength(4); // lundi 17 août : 4 créneaux de 15 min
+  });
+
+  it('sans availableFrom, le comportement est inchangé (aucun blocage)', () => {
+    const configSansBlocage = { ...appt5Config, availableFrom: undefined };
+    const dates = getAvailableSlots(configSansBlocage, '2026-08-08', []);
+    expect(dates.some((d) => d.date === '2026-08-10')).toBe(true); // lundi 10 août proposé
+  });
+});
+
+describe('isSlotAvailable — availableFrom (blocage des dates antérieures)', () => {
+  it('retourne false pour un créneau dont la date locale est strictement antérieure à availableFrom', () => {
+    // vendredi 14 août 18h30 Paris = 16:30 UTC → date locale 2026-08-14 < 2026-08-17
+    expect(isSlotAvailable(appt5Config, '2026-08-14T16:30:00.000Z', [])).toBe(false);
+  });
+
+  it('retourne true le jour même de availableFrom (date incluse)', () => {
+    // lundi 17 août 18h30 Paris = 16:30 UTC → date locale 2026-08-17 == availableFrom
+    expect(isSlotAvailable(appt5Config, '2026-08-17T16:30:00.000Z', [])).toBe(true);
+  });
+
+  it('retourne true pour un créneau après availableFrom', () => {
+    expect(isSlotAvailable(appt5Config, '2026-08-18T16:30:00.000Z', [])).toBe(true);
   });
 });
 

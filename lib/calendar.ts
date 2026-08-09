@@ -107,6 +107,7 @@ export function buildEventPayload(rdv: Rdv, listing: Listing): CalendarEventPayl
       `Téléphone : ${rdv.telephone}`,
       `Email : ${rdv.email}`,
       `Annonce : ${annonceUrl}`,
+      ...(listing.rdvBailleur ? [`Téléphone bailleur ${listing.rdvBailleur.phone}`] : []),
       ...(listing.rdvHost ? [`Téléphone de ${listing.rdvHost.name} : ${listing.rdvHost.phone}`] : []),
     ].join('\n'),
     reminders: {

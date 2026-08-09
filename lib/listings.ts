@@ -15,6 +15,7 @@ export interface Listing {
   calendarUrl?: string // Lien agenda Google de prise de RDV (défaut : agenda T3)
   rdv?: RdvConfig // Config de créneaux de visite intégrée (module RDV) — si présente, remplace le calendrier Google
   rdvHost?: { name: string; phone: string; email?: string } // Locataire qui réalise les visites (coordonnées ajoutées à l'event calendar + notification email)
+  rdvBailleur?: { name: string; phone: string } // Bailleur (coordonnées ajoutées à l'event calendar)
   price: {
     rent: number
     charges: number
@@ -231,7 +232,7 @@ export const listings: Record<string, Listing> = {
     location: 'Raismes',
     address: '32 B rue Henri Durre, 59590 Raismes, France',
     // Module RDV visite intégré : créneaux de 15 min, lundi à vendredi 18h30→19h30,
-    // réservation de J+1 à J+21 (heure Europe/Paris)
+    // réservation de J+1 à J+21 (heure Europe/Paris), pas de visite avant le 17 août 2026
     rdv: {
       durationMinutes: 15,
       days: [1, 2, 3, 4, 5],
@@ -240,6 +241,12 @@ export const listings: Record<string, Listing> = {
       minLeadDays: 1,
       maxLeadDays: 21,
       timezone: 'Europe/Paris',
+      availableFrom: '2026-08-17',
+    },
+    // Bailleur (coordonnées ajoutées à l'event calendar)
+    rdvBailleur: {
+      name: 'Gabriel',
+      phone: '07 81 15 45 03',
     },
     // Locataire actuel qui réalise les visites de l'appartement
     rdvHost: {

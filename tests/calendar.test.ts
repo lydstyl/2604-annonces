@@ -113,17 +113,21 @@ describe('buildEventPayload — construction du payload Google Calendar', () => 
     expect(payload.reminders.overrides).toEqual([{ method: 'popup', minutes: 1440 }]);
   });
 
-  it('ajoute le téléphone de M. Janot (rdvHost) en dernière ligne de la description pour appt5', () => {
+  it('ajoute le téléphone bailleur avant le téléphone de M. Janot (rdvHost en dernière ligne) pour appt5', () => {
     const payload = buildEventPayload(makeRdv(), appt5);
+    expect(payload.description).toContain('Téléphone bailleur 07 81 15 45 03');
     expect(payload.description).toContain('Téléphone de M. Janot : 07 68 34 97 79');
 
     const lines = payload.description.split('\n');
+    expect(lines).toHaveLength(5);
+    expect(lines[3]).toBe('Téléphone bailleur 07 81 15 45 03');
     expect(lines[lines.length - 1]).toBe('Téléphone de M. Janot : 07 68 34 97 79');
   });
 
-  it('laisse la description inchangée (pas de ligne Téléphone de) quand le listing n a pas de rdvHost', () => {
+  it('laisse la description inchangée (pas de ligne Téléphone de ni Téléphone bailleur) quand le listing n a ni rdvHost ni rdvBailleur', () => {
     const payload = buildEventPayload(makeRdv(), raismesT3);
     expect(payload.description).not.toContain('Téléphone de');
+    expect(payload.description).not.toContain('Téléphone bailleur');
     expect(payload.description.split('\n')).toHaveLength(3);
   });
 });
