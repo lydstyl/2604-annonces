@@ -130,6 +130,16 @@ describe('buildEventPayload — construction du payload Google Calendar', () => 
     expect(payload.description).not.toContain('Téléphone bailleur');
     expect(payload.description.split('\n')).toHaveLength(3);
   });
+
+  it('ajoute le rdvHost email comme participant (attendees) quand le listing en a un (appt5)', () => {
+    const payload = buildEventPayload(makeRdv(), appt5);
+    expect(payload.attendees).toEqual([{ email: 'janot59590@gmail.com' }]);
+  });
+
+  it('n ajoute pas attendees quand le listing n a pas de rdvHost email (raismes-t3)', () => {
+    const payload = buildEventPayload(makeRdv(), raismesT3);
+    expect(payload.attendees).toBeUndefined();
+  });
 });
 
 // ============ syncRdvToCalendar — logique d idempotence ============
@@ -228,7 +238,11 @@ describe('createVisitEvent', () => {
     const eventId = await created(auth, 'cal-123', payload);
 
     expect(eventId).toBe('evt-success-99');
-    expect(calMocks.insertEvent).toHaveBeenCalledWith({ calendarId: 'cal-123', requestBody: payload });
+    expect(calMocks.insertEvent).toHaveBeenCalledWith({
+      calendarId: 'cal-123',
+      requestBody: payload,
+      sendUpdates: 'all',
+    });
   });
 
   it('lève une erreur si l API retourne aucun id', async () => {

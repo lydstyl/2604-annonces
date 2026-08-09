@@ -18,6 +18,7 @@ export interface CalendarEventPayload {
   end: { dateTime: string; timeZone: string };
   location: string;
   description: string;
+  attendees?: Array<{ email: string }>;
   reminders: {
     useDefault: boolean;
     overrides: Array<{ method: string; minutes: number }>;
@@ -110,6 +111,7 @@ export function buildEventPayload(rdv: Rdv, listing: Listing): CalendarEventPayl
       ...(listing.rdvBailleur ? [`Téléphone bailleur ${listing.rdvBailleur.phone}`] : []),
       ...(listing.rdvHost ? [`Téléphone de ${listing.rdvHost.name} : ${listing.rdvHost.phone}`] : []),
     ].join('\n'),
+    ...(listing.rdvHost?.email ? { attendees: [{ email: listing.rdvHost.email }] } : {}),
     reminders: {
       useDefault: false,
       overrides: [{ method: 'popup', minutes: 1440 }],
@@ -153,6 +155,7 @@ export async function createVisitEvent(
   const res = await calendar.events.insert({
     calendarId,
     requestBody: payload,
+    sendUpdates: 'all',
   });
   const id = res.data.id;
   if (!id) {
