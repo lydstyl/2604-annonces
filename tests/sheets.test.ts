@@ -3,6 +3,7 @@ import {
   getSheetTabForListing,
   ensureSheetTab,
   buildCandidatureRow,
+  getSheetUrlForListing,
   SHEET_HEADERS,
   ADMIN_TAB,
   type SheetsClientLike,
@@ -60,6 +61,26 @@ describe('getSheetTabForListing — onglet dédié par annonce', () => {
 
   it('retombe sur Admin pour une annonce inconnue (comportement actuel inchangé)', () => {
     expect(getSheetTabForListing('inconnu')).toBe(ADMIN_TAB);
+  });
+});
+
+describe('getSheetUrlForListing — lien Google Sheets adapté à l annonce', () => {
+  it('pointe appt5 (T2) vers l onglet dédié avec gid=1158512914', () => {
+    expect(getSheetUrlForListing('appt5')).toBe(
+      'https://docs.google.com/spreadsheets/d/1rZ9NOGgLcBHKwVQvtwjvB3A0k5BZ5eC46LhbMffQM50/edit#gid=1158512914'
+    );
+  });
+
+  it('laisse le lien inchangé (sans gid) pour raismes-t3 (T3)', () => {
+    expect(getSheetUrlForListing('raismes-t3')).toBe(
+      'https://docs.google.com/spreadsheets/d/1rZ9NOGgLcBHKwVQvtwjvB3A0k5BZ5eC46LhbMffQM50'
+    );
+  });
+
+  it('retombe sur le lien par défaut (sans gid) pour un listing inconnu', () => {
+    expect(getSheetUrlForListing('listing-inconnu')).toBe(
+      'https://docs.google.com/spreadsheets/d/1rZ9NOGgLcBHKwVQvtwjvB3A0k5BZ5eC46LhbMffQM50'
+    );
   });
 });
 
