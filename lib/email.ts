@@ -3,6 +3,7 @@ import type { Candidature } from './storage';
 import type { Listing } from './listings';
 import type { Rdv } from './rdv';
 import { formatRdvDateTime } from './rdv';
+import { buildRdvBookingUrl } from './rdv-token';
 
 // Lien calendrier de réservation de visite (défaut : agenda T3)
 export const VISIT_CALENDAR_URL = 'https://calendar.app.google/DQPx7dskXd7bY6bq8';
@@ -28,8 +29,14 @@ export async function sendVisitRdvEmail(candidature: Candidature, listing: Listi
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://annonces.duckdns.org';
   const annonceUrl = `${siteUrl}/annonce/${listing.id}`;
   // Si l'annonce a une config RDV intégrée, on pointe vers la page de réservation
-  // interne ; sinon fallback sur le calendrier Google (comportement T3 inchangé).
-  const rdvBookingUrl = listing.rdv ? `${siteUrl}/rdv/${listing.id}` : null;
+  // interne avec un token HMAC portant les coordonnées du candidat (pré-remplissage
+  // du formulaire) ; sinon fallback sur le calendrier Google (comportement T3 inchangé).
+  const rdvBookingUrl = buildRdvBookingUrl(listing, {
+    nom: candidature.nom,
+    prenom: candidature.prenom,
+    telephone: candidature.telephone,
+    email: candidature.email,
+  });
   const calendarUrl = listing.calendarUrl || VISIT_CALENDAR_URL;
   const bookingUrl = rdvBookingUrl || calendarUrl;
   const bookingCtaLabel = rdvBookingUrl ? 'Réserver un créneau de visite' : 'Prendre rendez-vous';

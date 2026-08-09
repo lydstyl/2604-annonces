@@ -8,6 +8,7 @@ import {
   formatRdvDateTime,
   type RdvSlot,
 } from '@/lib/rdv';
+import { verifyRdvPrefillToken, type RdvPrefill } from '@/lib/rdv-token';
 
 // Génération statique des pages pour toutes les annonces disposant d'une config RDV
 export async function generateStaticParams() {
@@ -26,7 +27,7 @@ export const dynamic = 'force-dynamic';
 
 type RdvPageParams = { params: Promise<{ listingId: string }> };
 type RdvPageSearchParams = {
-  searchParams: Promise<{ confirmed?: string; start?: string; prenom?: string }>;
+  searchParams: Promise<{ confirmed?: string; start?: string; prenom?: string; token?: string }>;
 };
 
 function formatDateFr(dateStr: string): string {
@@ -117,7 +118,7 @@ function ConfirmationScreen({
 
 export default async function RdvPage({ params, searchParams }: RdvPageParams & RdvPageSearchParams) {
   const { listingId } = await params;
-  const { confirmed, start, prenom } = await searchParams;
+  const { confirmed, start, prenom, token } = await searchParams;
   const listing = getListingById(listingId);
 
   if (!listing || !listing.rdv) {
@@ -130,6 +131,11 @@ export default async function RdvPage({ params, searchParams }: RdvPageParams & 
   if (confirmed === '1' && start) {
     return <ConfirmationScreen listingId={listingId} start={start} prenom={prenom || ''} />;
   }
+
+  // Pré-remplissage des coordonnées depuis le token HMAC du lien de réservation
+  // (envoyé dans l'auto-email RDV). Token invalide/expiré → formulaire vide,
+  // le candidat peut remplir à la main (pas de blocage).
+  const prefill: RdvPrefill | null = token ? verifyRdvPrefillToken(token) : null;
 
   const existingRdvs = (await getRdvs()).filter((r) => r.listingId === listingId);
   const today = getTodayInTimeZone(timezone);
@@ -186,6 +192,7 @@ export default async function RdvPage({ params, searchParams }: RdvPageParams & 
                   type="text"
                   required
                   placeholder="Votre nom"
+                  defaultValue={prefill?.nom ?? ''}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
                 />
               </div>
@@ -199,6 +206,7 @@ export default async function RdvPage({ params, searchParams }: RdvPageParams & 
                   type="text"
                   required
                   placeholder="Votre prénom"
+                  defaultValue={prefill?.prenom ?? ''}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
                 />
               </div>
@@ -212,6 +220,7 @@ export default async function RdvPage({ params, searchParams }: RdvPageParams & 
                   type="tel"
                   required
                   placeholder="06 12 34 56 78"
+                  defaultValue={prefill?.telephone ?? ''}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
                 />
               </div>
@@ -225,6 +234,7 @@ export default async function RdvPage({ params, searchParams }: RdvPageParams & 
                   type="email"
                   required
                   placeholder="vous@exemple.fr"
+                  defaultValue={prefill?.email ?? ''}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
                 />
               </div>

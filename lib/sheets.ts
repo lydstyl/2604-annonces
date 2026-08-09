@@ -5,6 +5,100 @@ import os from 'os';
 
 const SPREADSHEET_ID = '1rZ9NOGgLcBHKwVQvtwjvB3A0k5BZ5eC46LhbMffQM50';
 
+// ============ Onglets du spreadsheet ============
+//
+// Les candidatures T3 (raismes-t3) continuent de s'écrire dans l'onglet
+// « Admin » historique. Les candidatures T2 appt5 (appt5) sont enregistrées
+// dans un onglet DÉDIÉ « T2 appt5 », créé automatiquement s'il n'existe pas,
+// pour ne pas mélanger les deux biens dans le même onglet.
+
+export const ADMIN_TAB = 'Admin';
+
+// Mapping annonce → onglet dédié. Toute annonce absente → Admin (défaut).
+export const SHEET_TAB_BY_LISTING: Record<string, string> = {
+  appt5: 'T2 appt5',
+};
+
+export function getSheetTabForListing(listingId: string): string {
+  return SHEET_TAB_BY_LISTING[listingId] ?? ADMIN_TAB;
+}
+
+// En-têtes du nouvel onglet dédié — mêmes colonnes que l'onglet Admin
+export const SHEET_HEADERS: string[] = [
+  'N°',
+  'Nom Prénom',
+  'Statut',
+  'Revenus',
+  'Garant',
+  'CDI > 3 mois',
+  'Téléphone',
+  'Email',
+  'Date',
+  'Remarques',
+  'Garantie Visale',
+];
+
+// Client Sheets minimal utilisé par ensureSheetTab (injectable pour les tests)
+export interface SheetsClientLike {
+  spreadsheets: {
+    get: (params: { spreadsheetId: string; fields?: string }) => Promise<{
+      data: { sheets?: Array<{ properties?: { title?: string } }> };
+    }>;
+    batchUpdate: (params: {
+      spreadsheetId: string;
+      requestBody: { requests: Array<{ addSheet: { properties: { title: string } } }> };
+    }) => Promise<unknown>;
+    values: {
+      update: (params: {
+        spreadsheetId: string;
+        range: string;
+        valueInputOption: string;
+        requestBody: { values: (string | number)[][] };
+      }) => Promise<unknown>;
+    };
+  };
+}
+
+/**
+ * Vérifie que l'onglet `tabName` existe dans le spreadsheet ; le crée via
+ * batchUpdate (addSheet) s'il est absent, puis initialise ses en-têtes.
+ * Fonction pure côté logique : le client Sheets est injecté (tests sans réseau).
+ */
+export async function ensureSheetTab(
+  sheets: SheetsClientLike,
+  spreadsheetId: string,
+  tabName: string
+): Promise<void> {
+  const meta = await sheets.spreadsheets.get({
+    spreadsheetId,
+    fields: 'sheets.properties.title',
+  });
+  const titles = (meta.data.sheets ?? [])
+    .map((s) => s.properties?.title)
+    .filter((t): t is string => Boolean(t));
+
+  if (titles.includes(tabName)) {
+    return;
+  }
+
+  await sheets.spreadsheets.batchUpdate({
+    spreadsheetId,
+    requestBody: {
+      requests: [{ addSheet: { properties: { title: tabName } } }],
+    },
+  });
+
+  // Initialiser les en-têtes du nouvel onglet
+  await sheets.spreadsheets.values.update({
+    spreadsheetId,
+    range: `'${tabName}'!A1:K1`,
+    valueInputOption: 'USER_ENTERED',
+    requestBody: { values: [SHEET_HEADERS] },
+  });
+}
+
+// ============ Formatage (présentation French-style) ============
+
 function formatFrenchDate(isoString: string): string {
   const d = new Date(isoString);
   const day = String(d.getDate()).padStart(2, '0');
@@ -30,8 +124,32 @@ function boolToOuiNon(val: boolean | undefined | null): string {
   return val ? '✅ Oui' : '❌ Non';
 }
 
+// ============ Construction de la ligne ============
+
 /**
- * Écrit la candidature dans le Google Sheet "Admin" (onglet des candidatures).
+ * Construit la ligne d'une candidature dans le sheet (11 colonnes, A..K).
+ * Note: préfixer le téléphone avec ' pour éviter que Sheets mange le 0 initial.
+ */
+export function buildCandidatureRow(candidature: Candidature, nextNum: number): (string | number)[] {
+  return [
+    nextNum,
+    `${candidature.prenom} ${candidature.nom}`,
+    'Nouveau',
+    formatRevenus(candidature.revenusMenuels),
+    boolToOuiNon(candidature.peutFournirGarant),
+    boolToOuiNon(candidature.cdiPlus3Mois),
+    `'${candidature.telephone}`, // ' force le format texte dans Sheets
+    candidature.email,
+    formatFrenchDate(candidature.dateSubmission),
+    candidature.remarques || '',
+    boolToOuiNon(candidature.garantieVisale), // colonne K — garantie Visale (Action Logement)
+  ];
+}
+
+/**
+ * Écrit la candidature dans l'onglet Google Sheet de son annonce :
+ * - appt5 (T2) → onglet dédié « T2 appt5 » (créé automatiquement si absent)
+ * - autres annonces (T3) → onglet « Admin » historique
  * Appelée après saveCandidature() dans la route API.
  * Ne fait pas planter la route si le write échoue.
  */
@@ -84,10 +202,16 @@ export async function appendCandidatureToSheet(candidature: Candidature): Promis
 
     const sheets = google.sheets({ version: 'v4', auth });
 
+    // 2bis. Déterminer l'onglet cible selon l'annonce et le créer si nécessaire.
+    // Cast localisé : le client googleapis a des signatures plus larges que le
+    // contrat minimal SheetsClientLike (utilisé pour les tests sans réseau).
+    const tab = getSheetTabForListing(candidature.listingId);
+    await ensureSheetTab(sheets as unknown as SheetsClientLike, SPREADSHEET_ID, tab);
+
     // 3. Lire la colonne A pour déterminer le prochain N°
     const existing = await sheets.spreadsheets.values.get({
       spreadsheetId: SPREADSHEET_ID,
-      range: "'Admin'!A:A",
+      range: `'${tab}'!A:A`,
     });
     const rows = existing.data.values || [];
     // rows[0] = en-tête "N°", rows[1]..rows[n] = données
@@ -100,31 +224,20 @@ export async function appendCandidatureToSheet(candidature: Candidature): Promis
     nextNum = allNums.length > 0 ? Math.max(...allNums) + 1 : 1;
 
     // 4. Construire la nouvelle ligne
-    // Note: préfixer le téléphone avec ' pour éviter que Sheets mange le 0 initial
-    const newRow = [
-      nextNum,
-      `${candidature.prenom} ${candidature.nom}`,
-      'Nouveau',
-      formatRevenus(candidature.revenusMenuels),
-      boolToOuiNon(candidature.peutFournirGarant),
-      boolToOuiNon(candidature.cdiPlus3Mois),
-      `'${candidature.telephone}`,  // ' force le format texte dans Sheets
-      candidature.email,
-      formatFrenchDate(candidature.dateSubmission),
-      candidature.remarques || '',
-      boolToOuiNon(candidature.garantieVisale), // colonne K — garantie Visale (Action Logement)
-    ];
+    const newRow = buildCandidatureRow(candidature, nextNum);
 
     // 5. Écrire la ligne
     const nextRowIndex = rows.length + 1; // header + existing data + 1
     await sheets.spreadsheets.values.update({
       spreadsheetId: SPREADSHEET_ID,
-      range: `'Admin'!A${nextRowIndex}:K${nextRowIndex}`,
+      range: `'${tab}'!A${nextRowIndex}:K${nextRowIndex}`,
       valueInputOption: 'USER_ENTERED',
       requestBody: { values: [newRow] },
     });
 
-    console.log(`[sheets] ✅ Candidature ajoutée au sheet (N°${nextNum}) : ${candidature.prenom} ${candidature.nom}`);
+    console.log(
+      `[sheets] ✅ Candidature ajoutée au sheet (onglet ${tab}, N°${nextNum}) : ${candidature.prenom} ${candidature.nom}`
+    );
   } catch (error) {
     // Ne pas faire planter la route si le sheet échoue
     console.error('[sheets] Erreur écriture Google Sheet:', error);
