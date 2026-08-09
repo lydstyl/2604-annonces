@@ -112,6 +112,35 @@ describe('verifyRdvPrefillToken — intégrité', () => {
     expect(createRdvPrefillToken(prefill)).toBeNull();
     expect(verifyRdvPrefillToken('abc.def')).toBeNull();
   });
+
+  it('rejette un token qui expire exactement à Date.now() (strictement dans le futur)', () => {
+    // exp === now → doit être rejeté car parsed.exp <= Date.now() est true
+    const now = Date.now();
+    const token = createRdvPrefillToken(prefill, {
+      secret: SECRET,
+      ttlMs: 0,
+      now,
+    });
+    expect(token).not.toBeNull();
+    // Vérifier que verifyRdvPrefillToken utilise bien Date.now() : impossible
+    // de mocker Date.now pour un seul appel, donc on teste le contrat :
+    // si on appelle immédiatement, le token est expiré (exp <= now courant).
+    // Note: le token a exp = now, et Date.now() au moment du verify est ≥ now,
+    // donc le token sera bien rejeté.
+    expect(verifyRdvPrefillToken(token, SECRET)).toBeNull();
+  });
+
+  it('accepte un token qui expire dans 1ms (limite de validité)', () => {
+    // exp > now → accepté (strict) — on utilise un now fixe dans le passé
+    // pour que Date.now() soit toujours < exp
+    const pastNow = Date.now() - 10_000;
+    const token = createRdvPrefillToken(prefill, {
+      secret: SECRET,
+      ttlMs: 20_000, // expire 10s après maintenant
+      now: pastNow,
+    });
+    expect(verifyRdvPrefillToken(token, SECRET)).toEqual(prefill);
+  });
 });
 
 describe('buildRdvBookingUrl — lien de réservation avec token', () => {

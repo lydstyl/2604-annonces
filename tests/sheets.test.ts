@@ -115,4 +115,32 @@ describe('buildCandidatureRow — construction de la ligne', () => {
     const row = buildCandidatureRow(makeCandidature({ revenusMenuels: 1800 }), 1);
     expect(row[3]).toContain('€');
   });
+
+  it('affiche ✅ Oui en colonne K pour garantieVisale (nouvelle colonne feature T2)', () => {
+    const row = buildCandidatureRow(makeCandidature({ garantieVisale: true }), 1);
+    expect(row[10]).toBe('✅ Oui');
+  });
+
+  it('affiche ❌ Non pour les booléens false (CDI, garant, Visale)', () => {
+    const row = buildCandidatureRow(makeCandidature({
+      cdiPlus3Mois: false,
+      peutFournirGarant: false,
+      garantieVisale: false,
+    }), 1);
+    expect(row[4]).toBe('❌ Non'); // peutFournirGarant
+    expect(row[5]).toBe('❌ Non'); // cdiPlus3Mois
+    expect(row[10]).toBe('❌ Non'); // garantieVisale
+  });
+
+  it('gère les remarques vides (chaîne vide)', () => {
+    const row = buildCandidatureRow(makeCandidature({ remarques: '' }), 1);
+    expect(row[9]).toBe('');
+  });
+
+  it('formate la date en français (JJ/MM/AAAA HH:MM)', () => {
+    const row = buildCandidatureRow(makeCandidature({ dateSubmission: '2025-12-31T23:59:00.000Z' }), 1);
+    // La date est formatée en heure locale par new Date(). Le test vérifie juste
+    // que le format est JJ/MM/AAAA HH:MM (pas ISO).
+    expect(row[8]).toMatch(/^\d{2}\/\d{2}\/\d{4} \d{2}:\d{2}$/);
+  });
 });
