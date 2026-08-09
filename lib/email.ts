@@ -4,6 +4,7 @@ import type { Listing } from './listings';
 import type { Rdv } from './rdv';
 import { formatRdvDateTime } from './rdv';
 import { buildRdvBookingUrl } from './rdv-token';
+import { getSheetUrlForListing } from './sheets';
 
 // Lien calendrier de réservation de visite (défaut : agenda T3)
 export const VISIT_CALENDAR_URL = 'https://calendar.app.google/DQPx7dskXd7bY6bq8';
@@ -379,7 +380,7 @@ export async function sendCandidatureEmail(candidature: Candidature, listingTitl
             <a href="${process.env.NEXT_PUBLIC_SITE_URL || 'https://annonces.duckdns.org'}/admin" style="background-color: #0284c7; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">
               📋 Voir toutes les candidatures (admin)
             </a>
-            <a href="https://docs.google.com/spreadsheets/d/1rZ9NOGgLcBHKwVQvtwjvB3A0k5BZ5eC46LhbMffQM50" style="background-color: #0f9d58; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">
+            <a href="${getSheetUrlForListing(candidature.listingId)}" style="background-color: #0f9d58; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">
               📊 Voir le Google Sheets
             </a>
           </div>
@@ -407,7 +408,7 @@ Date de soumission : ${new Date(candidature.dateSubmission).toLocaleString('fr-F
 ID de candidature : ${candidature.id}
 
 Voir toutes les candidatures (admin) : ${process.env.NEXT_PUBLIC_SITE_URL || 'https://annonces.duckdns.org'}/admin
-📊 Voir le Google Sheets : https://docs.google.com/spreadsheets/d/1rZ9NOGgLcBHKwVQvtwjvB3A0k5BZ5eC46LhbMffQM50
+📊 Voir le Google Sheets : ${getSheetUrlForListing(candidature.listingId)}
   `;
 
   const mailOptions = {

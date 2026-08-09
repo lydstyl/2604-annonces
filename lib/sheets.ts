@@ -23,6 +23,29 @@ export function getSheetTabForListing(listingId: string): string {
   return SHEET_TAB_BY_LISTING[listingId] ?? ADMIN_TAB;
 }
 
+// ============ Lien Google Sheets par annonce ============
+//
+// L'email de notification « Nouvelle candidature » (lib/email.ts) affiche un
+// lien « 📊 Voir le Google Sheets ». Pour les annonces avec un onglet dédié,
+// le lien pointe directement sur le bon onglet via son gid ; pour les autres
+// (défaut : T3, onglet Admin), le lien reste inchangé (sans gid).
+
+// gid des onglets dédiés : annonce → identifiant d'onglet (onglet « T2 appt5 »)
+export const SHEET_GID_BY_LISTING: Record<string, string> = {
+  appt5: '1158512914',
+};
+
+/**
+ * URL complète du Google Sheets (avec gid d'onglet le cas échéant) pour une
+ * annonce. Fonction pure : appt5 (T2) → lien avec gid=1158512914 ; tout autre
+ * listingId (dont raismes-t3, T3) → lien de base inchangé (sans gid).
+ */
+export function getSheetUrlForListing(listingId: string): string {
+  const baseUrl = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}`;
+  const gid = SHEET_GID_BY_LISTING[listingId];
+  return gid ? `${baseUrl}/edit#gid=${gid}` : baseUrl;
+}
+
 // En-têtes du nouvel onglet dédié — mêmes colonnes que l'onglet Admin
 export const SHEET_HEADERS: string[] = [
   'N°',
