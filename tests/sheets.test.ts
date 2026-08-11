@@ -55,8 +55,9 @@ describe('getSheetTabForListing — onglet dédié par annonce', () => {
     expect(tab).not.toBe(ADMIN_TAB);
   });
 
-  it('route raismes-t3 (T3) vers l onglet Admin existant', () => {
-    expect(getSheetTabForListing('raismes-t3')).toBe(ADMIN_TAB);
+  it('route raismes-t3 (T3) vers l onglet dédié T3 (gid 715080568), pas Admin', () => {
+    expect(getSheetTabForListing('raismes-t3')).toBe('T3');
+    expect(getSheetTabForListing('raismes-t3')).not.toBe(ADMIN_TAB);
   });
 
   it('retombe sur Admin pour une annonce inconnue (comportement actuel inchangé)', () => {
@@ -71,9 +72,9 @@ describe('getSheetUrlForListing — lien Google Sheets adapté à l annonce', ()
     );
   });
 
-  it('laisse le lien inchangé (sans gid) pour raismes-t3 (T3)', () => {
+  it('pointe raismes-t3 (T3) vers l onglet dédié T3 avec gid=715080568', () => {
     expect(getSheetUrlForListing('raismes-t3')).toBe(
-      'https://docs.google.com/spreadsheets/d/1rZ9NOGgLcBHKwVQvtwjvB3A0k5BZ5eC46LhbMffQM50'
+      'https://docs.google.com/spreadsheets/d/1rZ9NOGgLcBHKwVQvtwjvB3A0k5BZ5eC46LhbMffQM50/edit#gid=715080568'
     );
   });
 

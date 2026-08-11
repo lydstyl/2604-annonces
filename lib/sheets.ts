@@ -7,16 +7,17 @@ const SPREADSHEET_ID = '1rZ9NOGgLcBHKwVQvtwjvB3A0k5BZ5eC46LhbMffQM50';
 
 // ============ Onglets du spreadsheet ============
 //
-// Les candidatures T3 (raismes-t3) continuent de s'écrire dans l'onglet
-// « Admin » historique. Les candidatures T2 appt5 (appt5) sont enregistrées
-// dans un onglet DÉDIÉ « T2 appt5 », créé automatiquement s'il n'existe pas,
-// pour ne pas mélanger les deux biens dans le même onglet.
+// Les candidatures T3 (raismes-t3) s'écrivent dans l'onglet « T3 » historique
+// (gid 715080568). Les candidatures T2 appt5 (appt5) sont enregistrées dans un
+// onglet DÉDIÉ « T2 appt5 », créé automatiquement s'il n'existe pas, pour ne
+// pas mélanger les deux biens dans le même onglet.
 
 export const ADMIN_TAB = 'Admin';
 
 // Mapping annonce → onglet dédié. Toute annonce absente → Admin (défaut).
 export const SHEET_TAB_BY_LISTING: Record<string, string> = {
   appt5: 'T2 appt5',
+  'raismes-t3': 'T3',
 };
 
 export function getSheetTabForListing(listingId: string): string {
@@ -28,17 +29,19 @@ export function getSheetTabForListing(listingId: string): string {
 // L'email de notification « Nouvelle candidature » (lib/email.ts) affiche un
 // lien « 📊 Voir le Google Sheets ». Pour les annonces avec un onglet dédié,
 // le lien pointe directement sur le bon onglet via son gid ; pour les autres
-// (défaut : T3, onglet Admin), le lien reste inchangé (sans gid).
+// (défaut), le lien reste inchangé (sans gid).
 
-// gid des onglets dédiés : annonce → identifiant d'onglet (onglet « T2 appt5 »)
+// gid des onglets dédiés : annonce → identifiant d'onglet
 export const SHEET_GID_BY_LISTING: Record<string, string> = {
   appt5: '1158512914',
+  'raismes-t3': '715080568',
 };
 
 /**
  * URL complète du Google Sheets (avec gid d'onglet le cas échéant) pour une
- * annonce. Fonction pure : appt5 (T2) → lien avec gid=1158512914 ; tout autre
- * listingId (dont raismes-t3, T3) → lien de base inchangé (sans gid).
+ * annonce. Fonction pure : appt5 (T2) → lien avec gid=1158512914 ; raismes-t3
+ * (T3) → lien avec gid=715080568 ; tout autre listingId → lien de base
+ * inchangé (sans gid).
  */
 export function getSheetUrlForListing(listingId: string): string {
   const baseUrl = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}`;
@@ -172,7 +175,8 @@ export function buildCandidatureRow(candidature: Candidature, nextNum: number): 
 /**
  * Écrit la candidature dans l'onglet Google Sheet de son annonce :
  * - appt5 (T2) → onglet dédié « T2 appt5 » (créé automatiquement si absent)
- * - autres annonces (T3) → onglet « Admin » historique
+ * - raismes-t3 (T3) → onglet « T3 » historique (gid 715080568)
+ * - autres annonces → onglet « Admin » (défaut)
  * Appelée après saveCandidature() dans la route API.
  * Ne fait pas planter la route si le write échoue.
  */
@@ -210,16 +214,31 @@ export async function appendCandidatureToSheet(candidature: Candidature): Promis
     // Refresh si nécessaire
     const now = Date.now();
     if (tokenData.expiry && new Date(tokenData.expiry).getTime() - now < 5 * 60 * 1000) {
+      let refreshedToken: string | null = null;
+      let refreshedExpiry: string | null = null;
       try {
         const { credentials } = await auth.refreshAccessToken();
-        // Sauvegarder le token rafraîchi
-        tokenData.token = credentials.access_token;
-        tokenData.expiry = credentials.expiry_date
+        refreshedToken = credentials.access_token ?? null;
+        refreshedExpiry = credentials.expiry_date
           ? new Date(credentials.expiry_date).toISOString()
-          : tokenData.expiry;
-        fs.writeFileSync(tokenPath, JSON.stringify(tokenData, null, 2), 'utf-8');
+          : null;
       } catch (refreshErr) {
+        // Vrai échec du refresh : on garde le token existant.
         console.warn('[sheets] Refresh token échoué, tentative avec token existant');
+      }
+      if (refreshedToken) {
+        tokenData.token = refreshedToken;
+        if (refreshedExpiry) tokenData.expiry = refreshedExpiry;
+        try {
+          fs.writeFileSync(tokenPath, JSON.stringify(tokenData, null, 2), 'utf-8');
+        } catch (writeErr) {
+          // L'écriture du token rafraîchi peut échouer en Docker (volume monté
+          // en lecture seule : /root/.hermes/google_token.json:ro). Ce n'est PAS
+          // un échec de refresh — le token rafraîchi est déjà en mémoire via
+          // auth.refreshAccessToken() pour la session courante. On avertit sans
+          // masquer un vrai échec de refresh (géré au-dessus).
+          console.warn('[sheets] Token rafraîchi mais écriture impossible (volume en lecture seule ?), continuation avec le token en mémoire');
+        }
       }
     }
 
