@@ -3,17 +3,29 @@ import path from 'path';
 
 // ============ Types ============
 
+// Une plage horaire d'une journée (heure locale du fuseau de la config)
+export interface RdvTimeRange {
+  startTime: string; // 'HH:MM' heure locale de début de plage (ex: '18:40')
+  endTime: string; // 'HH:MM' heure locale de fin de plage (ex: '19:25')
+}
+
 // Config de créneaux de visite intégrée pour une annonce (champ optionnel Listing.rdv)
 export interface RdvConfig {
   durationMinutes: number; // durée EXACTE d'un créneau (ex: 15)
-  days: number[]; // jours ouvrés, convention JS getDay : 0 = dimanche, 1 = lundi, …
-  startTime: string; // 'HH:MM' heure locale de début de plage (ex: '18:30')
-  endTime: string; // 'HH:MM' heure locale de fin de plage (ex: '19:30')
+  // Grille simple (rétrocompatible) : UNE plage quotidienne + jours ouvrés.
+  // Utilisée UNIQUEMENT si schedule est absent (comportement historique, ex: appt5).
+  days?: number[]; // jours ouvrés, convention JS getDay : 0 = dimanche, 1 = lundi, …
+  startTime?: string; // 'HH:MM' heure locale de début de plage (ex: '18:30')
+  endTime?: string; // 'HH:MM' heure locale de fin de plage (ex: '19:30')
   minLeadDays: number; // réservation possible à partir de J + minLeadDays
   maxLeadDays: number; // réservation possible jusqu'à J + maxLeadDays
   timezone: string; // IANA, ex: 'Europe/Paris'
   availableFrom?: string; // Date calendaire (YYYY-MM-DD, fuseau config.timezone) à partir de laquelle
   // les créneaux sont proposés — toute date strictement inférieure est exclue (bornes incluses)
+  // Grille multi-plages par jour (feature T3) : clé = jour getDay JS (0=dimanche … 6=samedi),
+  // valeur = liste des plages horaires du jour (concaténées puis triées, chevauchements exclus).
+  // Si présente, SEULES ses clés définissent les jours ouverts — days/startTime/endTime sont ignorés.
+  schedule?: Partial<Record<number, Array<RdvTimeRange>>>;
 }
 
 // Un créneau disponible (bornes ISO UTC)
@@ -204,24 +216,66 @@ export function hasOverlap(rdvs: Rdv[], startISO: string, endISO: string): boole
 }
 
 // Génère les créneaux d'une date calendaire (YYYY-MM-DD), en excluant ceux
-// déjà pris (chevauchement). Retourne [] si le jour n'est pas dans config.days.
+// déjà pris (chevauchement). Retourne [] si le jour n'est pas ouvert.
+// Deux modes :
+//  - schedule présent : SEULES les clés de schedule définissent les jours ouverts ;
+//    les créneaux sont générés sur CHAQUE plage de la journée (concaténées, triées,
+//    chevauchements entre plages exclus). days/startTime/endTime sont ignorés.
+//  - schedule absent : comportement historique (days + startTime + endTime).
 export function generateSlotsForDate(config: RdvConfig, dateStr: string, existingRdvs: Rdv[] = []): RdvSlot[] {
   const day = new Date(`${dateStr}T00:00:00Z`).getUTCDay();
-  if (!config.days.includes(day)) {
-    return [];
-  }
-
-  const startMs = zonedTimeToUtc(dateStr, config.startTime, config.timezone).getTime();
-  const endMs = zonedTimeToUtc(dateStr, config.endTime, config.timezone).getTime();
   const durationMs = config.durationMinutes * 60 * 1000;
 
-  const slots: RdvSlot[] = [];
-  for (let t = startMs; t + durationMs <= endMs; t += durationMs) {
-    const start = new Date(t).toISOString();
-    const end = new Date(t + durationMs).toISOString();
-    if (!hasOverlap(existingRdvs, start, end)) {
-      slots.push({ start, end });
+  // Plages horaires de la journée (bornes en ms UTC)
+  const ranges: Array<{ startMs: number; endMs: number }> = [];
+  if (config.schedule) {
+    const dayRanges = config.schedule[day];
+    if (!dayRanges || dayRanges.length === 0) {
+      return [];
     }
+    for (const range of dayRanges) {
+      ranges.push({
+        startMs: zonedTimeToUtc(dateStr, range.startTime, config.timezone).getTime(),
+        endMs: zonedTimeToUtc(dateStr, range.endTime, config.timezone).getTime(),
+      });
+    }
+  } else {
+    if (!config.days?.includes(day)) {
+      return [];
+    }
+    ranges.push({
+      startMs: zonedTimeToUtc(dateStr, config.startTime!, config.timezone).getTime(),
+      endMs: zonedTimeToUtc(dateStr, config.endTime!, config.timezone).getTime(),
+    });
+  }
+
+  // Créneaux candidats (durationMinutes) sur chaque plage, concaténés puis triés
+  const candidates: Array<{ start: string; end: string; startMs: number; endMs: number }> = [];
+  for (const range of ranges) {
+    for (let t = range.startMs; t + durationMs <= range.endMs; t += durationMs) {
+      candidates.push({
+        start: new Date(t).toISOString(),
+        end: new Date(t + durationMs).toISOString(),
+        startMs: t,
+        endMs: t + durationMs,
+      });
+    }
+  }
+  candidates.sort((a, b) => a.startMs - b.startMs);
+
+  // Exclut les chevauchements entre créneaux issus de plages différentes
+  // (plages qui se recouvrent) et les créneaux déjà pris.
+  const slots: RdvSlot[] = [];
+  let lastEndMs = Number.NEGATIVE_INFINITY;
+  for (const candidate of candidates) {
+    if (candidate.startMs < lastEndMs) {
+      continue; // chevauche le créneau précédemment gardé
+    }
+    if (hasOverlap(existingRdvs, candidate.start, candidate.end)) {
+      continue;
+    }
+    slots.push({ start: candidate.start, end: candidate.end });
+    lastEndMs = candidate.endMs;
   }
   return slots;
 }

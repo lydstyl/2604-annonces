@@ -108,6 +108,43 @@ export const listings: Record<string, Listing> = {
     location: 'Raismes Centre',
     address: 'Bd Roger Claie, 59590 Raismes, France',
     mapEmbedUrl: 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d635.9327854818555!2d3.4846039697703786!3d50.390210298223806!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x47c2ee979f3b1fd3%3A0xb30f9e3dd17b1154!2sBd%20Roger%20Claie%2C%2059590%20Raismes!5e0!3m2!1sfr!2sfr!4v1776209220125!5m2!1sfr!2sfr',
+    // Module RDV visite intégré : grille EXACTE de la booking page Google de Gabriel
+    // (durée 15 min, timezone Europe/Paris). schedule : clé = jour getDay JS
+    // (0=dimanche … 6=samedi), valeur = plages horaires du jour (concaténées, triées).
+    // Mercredi (3) : aucune plage (jour fermé). Réservation de J+1 à J+30, sans
+    // availableFrom (T3 disponible immédiatement). Gabriel fait les visites → PAS de rdvHost.
+    rdv: {
+      durationMinutes: 15,
+      schedule: {
+        0: [
+          { startTime: '10:40', endTime: '11:10' },
+          { startTime: '18:20', endTime: '18:50' },
+        ],
+        1: [{ startTime: '08:40', endTime: '09:10' }],
+        2: [
+          { startTime: '08:40', endTime: '09:10' },
+          { startTime: '18:40', endTime: '19:25' },
+        ],
+        3: [], // mercredi : jour fermé
+        4: [{ startTime: '18:40', endTime: '19:25' }],
+        5: [
+          { startTime: '08:40', endTime: '09:10' },
+          { startTime: '18:40', endTime: '19:25' },
+        ],
+        6: [
+          { startTime: '10:40', endTime: '11:10' },
+          { startTime: '18:20', endTime: '18:50' },
+        ],
+      },
+      minLeadDays: 1,
+      maxLeadDays: 30,
+      timezone: 'Europe/Paris',
+    },
+    // Bailleur (coordonnées ajoutées à l'event calendar) — Gabriel fait les visites lui-même
+    rdvBailleur: {
+      name: 'Gabriel',
+      phone: '07 81 15 45 03',
+    },
     price: {
       rent: 630,
       charges: 35,

@@ -14,6 +14,7 @@ import {
   zonedTimeToUtc,
   type Rdv,
   type RdvBookingInput,
+  type RdvConfig,
 } from '../lib/rdv';
 import { getListingById } from '../lib/listings';
 
@@ -61,10 +62,6 @@ describe('Config rdv de appt5 (T2 n°5)', () => {
     expect(appt5Config.availableFrom).toBe('2026-08-17'); // pas de visite avant le 17 août 2026
   });
 
-  it('raismes-t3 n a pas de config rdv (fallback Google Calendar inchangé)', () => {
-    expect(getListingById('raismes-t3')!.rdv).toBeUndefined();
-  });
-
   it('appt5 expose le rdvBailleur (name Gabriel, phone 07 81 15 45 03)', () => {
     const listing = getListingById('appt5')!;
     expect(listing.rdvBailleur).toBeDefined();
@@ -72,8 +69,68 @@ describe('Config rdv de appt5 (T2 n°5)', () => {
     expect(listing.rdvBailleur!.phone).toBe('07 81 15 45 03');
   });
 
-  it('raismes-t3 n a pas de rdvBailleur (inchangé)', () => {
-    expect(getListingById('raismes-t3')!.rdvBailleur).toBeUndefined();
+  it('reste rétrocompatible : pas de schedule, grille days + startTime + endTime inchangée', () => {
+    expect(appt5Config.schedule).toBeUndefined();
+    // Comportement historique conservé : lundi 10/08 → 4 créneaux de 18h30 à 19h30
+    expect(generateSlotsForDate(appt5Config, '2026-08-10').map((s) => s.start)).toEqual([
+      '2026-08-10T16:30:00.000Z',
+      '2026-08-10T16:45:00.000Z',
+      '2026-08-10T17:00:00.000Z',
+      '2026-08-10T17:15:00.000Z',
+    ]);
+  });
+});
+
+describe('Config rdv de raismes-t3 (T3) — grille EXACTE de la booking page Google', () => {
+  it('a une config rdv avec schedule (grille multi-plages par jour) et PAS de days', () => {
+    const rdv = getListingById('raismes-t3')!.rdv!;
+    expect(rdv).toBeDefined();
+    expect(rdv.durationMinutes).toBe(15); // EXACTEMENT 15 minutes
+    expect(rdv.schedule).toEqual({
+      0: [
+        { startTime: '10:40', endTime: '11:10' },
+        { startTime: '18:20', endTime: '18:50' },
+      ],
+      1: [{ startTime: '08:40', endTime: '09:10' }],
+      2: [
+        { startTime: '08:40', endTime: '09:10' },
+        { startTime: '18:40', endTime: '19:25' },
+      ],
+      3: [], // mercredi : jour fermé
+      4: [{ startTime: '18:40', endTime: '19:25' }],
+      5: [
+        { startTime: '08:40', endTime: '09:10' },
+        { startTime: '18:40', endTime: '19:25' },
+      ],
+      6: [
+        { startTime: '10:40', endTime: '11:10' },
+        { startTime: '18:20', endTime: '18:50' },
+      ],
+    });
+    expect(rdv.minLeadDays).toBe(1);
+    expect(rdv.maxLeadDays).toBe(30);
+    expect(rdv.timezone).toBe('Europe/Paris');
+    expect(rdv.availableFrom).toBeUndefined(); // T3 disponible immédiatement, pas de blocage
+    expect(rdv.days).toBeUndefined(); // grille par schedule uniquement
+  });
+
+  it('expose le rdvBailleur Gabriel (07 81 15 45 03) sans rdvHost (Gabriel fait les visites)', () => {
+    const listing = getListingById('raismes-t3')!;
+    expect(listing.rdvBailleur).toEqual({ name: 'Gabriel', phone: '07 81 15 45 03' });
+    expect(listing.rdvHost).toBeUndefined();
+  });
+
+  it('génère les créneaux de la grille réelle : dimanche 2 plages (4 créneaux), mercredi fermé', () => {
+    const rdv = getListingById('raismes-t3')!.rdv!;
+    // dimanche 09/08 : [10:40-11:10] + [18:20-18:50] (été UTC+2)
+    expect(generateSlotsForDate(rdv, '2026-08-09').map((s) => s.start)).toEqual([
+      '2026-08-09T08:40:00.000Z', // 10h40 Paris
+      '2026-08-09T08:55:00.000Z', // 10h55
+      '2026-08-09T16:20:00.000Z', // 18h20 Paris
+      '2026-08-09T16:35:00.000Z', // 18h35
+    ]);
+    // mercredi 12/08 : jour fermé
+    expect(generateSlotsForDate(rdv, '2026-08-12')).toEqual([]);
   });
 });
 
@@ -493,5 +550,155 @@ describe('isSlotAvailable — cas limites', () => {
     } finally {
       await fs.rm(tmpDir, { recursive: true, force: true });
     }
+  });
+});
+
+// ============ schedule multi-plages par jour (feature T3 raismes-t3) ============
+//
+// Config générique : days/startTime/endTime volontairement présents pour prouver
+// qu'ils sont IGNORÉS quand schedule existe (seules les clés de schedule
+// définissent les jours ouverts).
+
+const scheduleConfig: RdvConfig = {
+  durationMinutes: 15,
+  days: [1, 2, 3, 4, 5], // doit être ignoré : le vendredi (5) n'est PAS dans schedule
+  startTime: '18:30',
+  endTime: '19:30',
+  schedule: {
+    0: [
+      { startTime: '10:40', endTime: '11:10' },
+      { startTime: '18:20', endTime: '18:50' },
+    ], // dimanche : 2 plages (4 créneaux)
+    1: [{ startTime: '08:40', endTime: '09:10' }], // lundi : 1 plage (2 créneaux)
+    2: [
+      { startTime: '18:40', endTime: '19:25' },
+      { startTime: '08:40', endTime: '09:10' },
+    ], // mardi : plages dans le désordre → tri attendu (5 créneaux)
+    3: [], // mercredi : clé présente, liste vide → jour fermé
+    4: [
+      { startTime: '18:40', endTime: '19:25' },
+      { startTime: '19:00', endTime: '19:30' },
+    ], // jeudi : plages qui se chevauchent → exclusion des chevauchements
+  },
+  minLeadDays: 1,
+  maxLeadDays: 30,
+  timezone: 'Europe/Paris',
+};
+
+describe('generateSlotsForDate — schedule multi-plages par jour', () => {
+  it('génère les créneaux sur CHAQUE plage, concaténés et triés (dimanche 2 plages → 4 créneaux)', () => {
+    // 2026-08-09 = dimanche (day 0) ; été → UTC+2
+    const slots = generateSlotsForDate(scheduleConfig, '2026-08-09');
+    expect(slots).toHaveLength(4);
+    expect(slots.map((s) => s.start)).toEqual([
+      '2026-08-09T08:40:00.000Z', // 10h40 Paris
+      '2026-08-09T08:55:00.000Z', // 10h55
+      '2026-08-09T16:20:00.000Z', // 18h20 Paris
+      '2026-08-09T16:35:00.000Z', // 18h35
+    ]);
+    expect(slots.map((s) => s.end)).toEqual([
+      '2026-08-09T08:55:00.000Z',
+      '2026-08-09T09:10:00.000Z',
+      '2026-08-09T16:35:00.000Z',
+      '2026-08-09T16:50:00.000Z',
+    ]);
+  });
+
+  it('génère les créneaux d une plage unique (lundi 1 plage → 2 créneaux)', () => {
+    const slots = generateSlotsForDate(scheduleConfig, '2026-08-10'); // lundi
+    expect(slots.map((s) => s.start)).toEqual([
+      '2026-08-10T06:40:00.000Z', // 08h40 Paris
+      '2026-08-10T06:55:00.000Z', // 08h55
+    ]);
+  });
+
+  it('tri les créneaux quand les plages sont déclarées dans le désordre (mardi)', () => {
+    // schedule[2] déclare [18:40-19:25] AVANT [08:40-09:10] → le résultat doit être trié
+    const slots = generateSlotsForDate(scheduleConfig, '2026-08-11'); // mardi
+    expect(slots.map((s) => s.start)).toEqual([
+      '2026-08-11T06:40:00.000Z', // 08h40 Paris
+      '2026-08-11T06:55:00.000Z', // 08h55
+      '2026-08-11T16:40:00.000Z', // 18h40 Paris
+      '2026-08-11T16:55:00.000Z', // 18h55
+      '2026-08-11T17:10:00.000Z', // 19h10
+    ]);
+  });
+
+  it('exclut les chevauchements entre plages qui se recouvrent (jeudi)', () => {
+    // schedule[4] : [18:40-19:25] + [19:00-19:30] → candidats 18:40, 18:55, 19:00, 19:10, 19:15
+    // 19:00 chevauche le créneau gardé 18:55-19:10 → exclu ; 19:15 chevauche 19:10-19:25 → exclu
+    const slots = generateSlotsForDate(scheduleConfig, '2026-08-13'); // jeudi
+    expect(slots.map((s) => s.start)).toEqual([
+      '2026-08-13T16:40:00.000Z', // 18h40 Paris
+      '2026-08-13T16:55:00.000Z', // 18h55
+      '2026-08-13T17:10:00.000Z', // 19h10
+    ]);
+  });
+
+  it('jour fermé (clé présente avec liste vide) → aucun créneau', () => {
+    expect(generateSlotsForDate(scheduleConfig, '2026-08-12')).toEqual([]); // mercredi
+  });
+
+  it('jour absent du schedule → aucun créneau, même si days le contient (vendredi)', () => {
+    // days=[1..5] contient le vendredi, mais schedule n a pas de clé 5 → fermé
+    expect(generateSlotsForDate(scheduleConfig, '2026-08-14')).toEqual([]); // vendredi
+  });
+
+  it('ignore days quand schedule est présent (dimanche ouvert malgré days=[1..5])', () => {
+    // days=[1..5] ne contient PAS le dimanche, mais schedule[0] existe → ouvert
+    expect(generateSlotsForDate(scheduleConfig, '2026-08-09').length).toBe(4);
+  });
+
+  it('retire les créneaux déjà pris dans une grille schedule', () => {
+    const taken = [makeRdv({ start: '2026-08-09T08:40:00.000Z', end: '2026-08-09T08:55:00.000Z' })];
+    const slots = generateSlotsForDate(scheduleConfig, '2026-08-09', taken);
+    expect(slots).toHaveLength(3);
+    expect(slots.map((s) => s.start)).not.toContain('2026-08-09T08:40:00.000Z');
+  });
+});
+
+describe('getAvailableSlots — schedule (fenêtre de réservation)', () => {
+  it('ne propose que des jours définis par schedule, jamais un jour fermé', () => {
+    // from = samedi 08/08, minLeadDays=1 → 1er jour = dimanche 09/08 (ouvert via schedule)
+    const dates = getAvailableSlots(scheduleConfig, '2026-08-08', []);
+    expect(dates.length).toBeGreaterThan(0);
+    expect(dates[0].date).toBe('2026-08-09');
+    expect(dates[0].slots).toHaveLength(4);
+    // mercredi 12/08 (clé 3 vide) et vendredi 14/08 (clé 5 absente) jamais proposés
+    expect(dates.some((d) => d.date === '2026-08-12')).toBe(false);
+    expect(dates.some((d) => d.date === '2026-08-14')).toBe(false);
+    // toutes les dates proposées ont une clé schedule (0,1,2,4)
+    for (const d of dates) {
+      const day = new Date(`${d.date}T00:00:00Z`).getUTCDay();
+      expect([0, 1, 2, 4]).toContain(day);
+    }
+  });
+
+  it('borne la fenêtre à maxLeadDays=30 jours', () => {
+    const dates = getAvailableSlots(scheduleConfig, '2026-08-08', []);
+    // from 08-08 + 30 jours = 09-07 ; dernière date ≤ 09-07
+    const last = dates[dates.length - 1];
+    expect(last.date <= '2026-09-07').toBe(true);
+    expect(dates.some((d) => d.date === '2026-09-08')).toBe(false);
+  });
+});
+
+describe('isSlotAvailable — schedule', () => {
+  it('retourne true pour un créneau valide dans une plage', () => {
+    // jeudi 13/08 18h40 Paris = 16h40 UTC
+    expect(isSlotAvailable(scheduleConfig, '2026-08-13T16:40:00.000Z', [])).toBe(true);
+  });
+
+  it('retourne false dans le trou entre deux plages (dimanche 13h00 Paris)', () => {
+    // dimanche : plages [10:40-11:10] et [18:20-18:50] → 13h00 Paris = 11h00 UTC
+    expect(isSlotAvailable(scheduleConfig, '2026-08-09T11:00:00.000Z', [])).toBe(false);
+  });
+
+  it('retourne false un jour fermé (mercredi)', () => {
+    expect(isSlotAvailable(scheduleConfig, '2026-08-12T16:40:00.000Z', [])).toBe(false);
+  });
+
+  it('retourne false pour un horaire qui n est pas un début de créneau (18h45 Paris dimanche)', () => {
+    expect(isSlotAvailable(scheduleConfig, '2026-08-09T16:45:00.000Z', [])).toBe(false);
   });
 });

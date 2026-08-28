@@ -153,11 +153,13 @@ describe('buildRdvBookingUrl — lien de réservation avec token', () => {
     expect(verifyRdvPrefillToken(token, SECRET)).toEqual(prefill);
   });
 
-  it('retourne null pour une annonce sans config rdv (raismes-t3 → fallback calendrier Google inchangé)', () => {
+  it('retourne le lien interne avec token HMAC pour raismes-t3 (config rdv schedule intégrée)', () => {
     const url = buildRdvBookingUrl(getListingById('raismes-t3')!, prefill, 'https://annonces.duckdns.org', {
       secret: SECRET,
     });
-    expect(url).toBeNull();
+    expect(url).toMatch(/^https:\/\/annonces\.duckdns\.org\/rdv\/raismes-t3\?token=/);
+    const token = url!.split('token=')[1];
+    expect(verifyRdvPrefillToken(token, SECRET)).toEqual(prefill);
   });
 
   it('retourne le lien SANS token si le secret est absent (pré-remplissage désactivé)', () => {
