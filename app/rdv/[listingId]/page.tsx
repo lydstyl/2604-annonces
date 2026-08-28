@@ -164,12 +164,22 @@ export default async function RdvPage({ params, searchParams }: RdvPageParams & 
             <li>
               <strong>Durée :</strong> {listing.rdv.durationMinutes} minutes
             </li>
+            {listing.rdv.schedule ? (
+              <li>
+                <strong>Horaires :</strong> planning par jour — voir les créneaux disponibles ci-dessous
+              </li>
+            ) : (
+              <li>
+                <strong>Horaires :</strong> du lundi au vendredi, de {listing.rdv.startTime!.replace(':', 'h')} à{' '}
+                {listing.rdv.endTime!.replace(':', 'h')}
+              </li>
+            )}
             <li>
-              <strong>Horaires :</strong> du lundi au vendredi, de {listing.rdv.startTime.replace(':', 'h')} à{' '}
-              {listing.rdv.endTime.replace(':', 'h')}
-            </li>
-            <li>
-              <strong>Réservation :</strong> de demain jusqu'à 3 semaines à l'avance
+              <strong>Réservation :</strong> de demain jusqu'à{' '}
+              {listing.rdv.maxLeadDays % 7 === 0
+                ? `${listing.rdv.maxLeadDays / 7} semaine${listing.rdv.maxLeadDays / 7 > 1 ? 's' : ''}`
+                : `${listing.rdv.maxLeadDays} jours`}{' '}
+              à l'avance
             </li>
           </ul>
         </div>

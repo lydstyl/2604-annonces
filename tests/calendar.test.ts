@@ -124,11 +124,14 @@ describe('buildEventPayload — construction du payload Google Calendar', () => 
     expect(lines[lines.length - 1]).toBe('Téléphone de M. Janot : 07 68 34 97 79');
   });
 
-  it('laisse la description inchangée (pas de ligne Téléphone de ni Téléphone bailleur) quand le listing n a ni rdvHost ni rdvBailleur', () => {
+  it('ajoute le téléphone bailleur (Gabriel) mais aucune ligne rdvHost pour raismes-t3 (pas de rdvHost)', () => {
     const payload = buildEventPayload(makeRdv(), raismesT3);
+    expect(payload.description).toContain('Téléphone bailleur 07 81 15 45 03');
     expect(payload.description).not.toContain('Téléphone de');
-    expect(payload.description).not.toContain('Téléphone bailleur');
-    expect(payload.description.split('\n')).toHaveLength(3);
+
+    const lines = payload.description.split('\n');
+    expect(lines).toHaveLength(4);
+    expect(lines[3]).toBe('Téléphone bailleur 07 81 15 45 03');
   });
 
   it('ajoute le rdvHost email comme participant (attendees) quand le listing en a un (appt5)', () => {
