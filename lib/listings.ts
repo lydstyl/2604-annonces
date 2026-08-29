@@ -15,7 +15,7 @@ export interface Listing {
   calendarUrl?: string // Lien agenda Google de prise de RDV (défaut : agenda T3)
   rdv?: RdvConfig // Config de créneaux de visite intégrée (module RDV) — si présente, remplace le calendrier Google
   rdvHost?: { name: string; phone: string; email?: string } // Locataire qui réalise les visites (coordonnées ajoutées à l'event calendar + notification email)
-  rdvBailleur?: { name: string; phone: string } // Bailleur (coordonnées ajoutées à l'event calendar)
+  rdvBailleur?: { name: string; phone: string; email?: string } // Bailleur (coordonnées ajoutées à l'event calendar + emails candidat)
   price: {
     rent: number
     charges: number
@@ -144,6 +144,7 @@ export const listings: Record<string, Listing> = {
     rdvBailleur: {
       name: 'Gabriel',
       phone: '07 81 15 45 03',
+      email: 'lydstyl@gmail.com',
     },
     price: {
       rent: 630,
@@ -284,6 +285,7 @@ export const listings: Record<string, Listing> = {
     rdvBailleur: {
       name: 'Gabriel',
       phone: '07 81 15 45 03',
+      email: 'lydstyl@gmail.com',
     },
     // Locataire actuel qui réalise les visites de l'appartement
     rdvHost: {

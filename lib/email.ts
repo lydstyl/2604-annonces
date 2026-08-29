@@ -133,6 +133,17 @@ export async function sendRdvConfirmationEmail(rdv: Rdv, listing: Listing) {
   const logementLabel = listing.type ? `l'appartement ${listing.type} situé à Raismes` : 'le logement situé à Raismes';
   const timezone = listing.rdv?.timezone ?? 'Europe/Paris';
   const rdvDateTime = formatRdvDateTime(rdv.start, timezone);
+  const dureeMinutes = listing.rdv?.durationMinutes ?? 15;
+
+  // Coordonnées de contact : bailleur (Gabriel) dans la confirmation pour que le
+  // candidat puisse modifier/annuler — même sans Google Calendar (cas T2 : la visite
+  // est assurée par le locataire actuel, le candidat doit pouvoir le joindre).
+  const bailleurEmail = listing.rdvBailleur?.email ?? process.env.EMAIL_TO ?? 'lydstyl@gmail.com';
+  const bailleurPhone = listing.rdvBailleur?.phone;
+  const contactLine = `Pour modifier ou annuler ce rendez-vous, écrivez à ${bailleurEmail} ou appelez le ${bailleurPhone}.`;
+  const hostLine = listing.rdvHost
+    ? `ℹ️ La visite est assurée par ${listing.rdvHost.name} : merci de le prévenir de votre arrivée au ${listing.rdvHost.phone}.`
+    : '';
 
   const emailText = `Bonjour ${rdv.prenom},
 
@@ -141,7 +152,10 @@ Votre visite pour ${logementLabel} est bien confirmée.
 📅 Créneau réservé : ${rdvDateTime}
 📍 Adresse : ${listing.address}
 
-Votre visite durera 15 minutes. Si vous souhaitez modifier ou annuler ce rendez-vous, répondez simplement à cet email.
+Votre visite durera ${dureeMinutes} minutes.
+
+${contactLine}
+${hostLine}
 
 À bientôt,
 Gabriel Brun`;
@@ -171,9 +185,10 @@ Gabriel Brun`;
           <div class="rdv-box">
             <p><strong>📅 Créneau réservé :</strong> ${rdvDateTime}</p>
             <p><strong>📍 Adresse :</strong> ${listing.address}</p>
-            <p><strong>⏱️ Durée :</strong> 15 minutes</p>
+            <p><strong>⏱️ Durée :</strong> ${dureeMinutes} minutes</p>
           </div>
-          <p>Si vous souhaitez modifier ou annuler ce rendez-vous, répondez simplement à cet email.</p>
+          <p>${contactLine}</p>
+          ${hostLine ? `<p>${hostLine}</p>` : ''}
           <p>À bientôt,<br/>Gabriel Brun</p>
         </div>
         <div class="footer">

@@ -59,7 +59,7 @@ export interface RdvBookingInput {
   email: string;
 }
 
-export type BookRdvResult = { ok: true; rdv: Rdv } | { ok: false; reason: 'CONFLICT' };
+export type BookRdvResult = { ok: true; rdv: Rdv } | { ok: false; reason: 'CONFLICT' | 'ALREADY_BOOKED' };
 
 // ============ Persistance (même pattern que candidatures.json) ============
 
@@ -110,6 +110,12 @@ export async function bookRdv(input: RdvBookingInput, filePath: string = RDVS_FI
 
     if (hasOverlap(rdvs, input.start, end)) {
       return { ok: false as const, reason: 'CONFLICT' as const };
+    }
+
+    // Anti-doublon : un même email ne peut réserver qu'UN SEUL créneau futur
+    // par annonce. Les RDV passés (visite effectuée) ne bloquent pas.
+    if (hasExistingBooking(rdvs, input.listingId, input.email)) {
+      return { ok: false as const, reason: 'ALREADY_BOOKED' as const };
     }
 
     const rdv: Rdv = {
@@ -213,6 +219,25 @@ export function hasOverlap(rdvs: Rdv[], startISO: string, endISO: string): boole
     const rEnd = new Date(r.end).getTime();
     return rStart < end && rEnd > start;
   });
+}
+
+// Un candidat (identifié par email, insensible à la casse) a-t-il déjà un RDV
+// FUTUR pour cette annonce ? Seuls les RDV dont la fin est strictement après
+// `now` comptent : une visite passée ne bloque pas (le candidat peut
+// légitimement revenir visiter plus tard). `now` est injectable pour les tests.
+export function hasExistingBooking(
+  rdvs: Rdv[],
+  listingId: string,
+  email: string,
+  now: Date = new Date()
+): boolean {
+  const normalized = email.trim().toLowerCase();
+  return rdvs.some(
+    (r) =>
+      r.listingId === listingId &&
+      r.email.trim().toLowerCase() === normalized &&
+      new Date(r.end).getTime() > now.getTime()
+  );
 }
 
 // Génère les créneaux d'une date calendaire (YYYY-MM-DD), en excluant ceux

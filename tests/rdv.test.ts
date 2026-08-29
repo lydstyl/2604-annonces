@@ -7,6 +7,7 @@ import {
   getAvailableSlots,
   isSlotAvailable,
   hasOverlap,
+  hasExistingBooking,
   bookRdv,
   formatRdvDateTime,
   getTodayInTimeZone,
@@ -116,7 +117,7 @@ describe('Config rdv de raismes-t3 (T3) — grille EXACTE de la booking page Goo
 
   it('expose le rdvBailleur Gabriel (07 81 15 45 03) sans rdvHost (Gabriel fait les visites)', () => {
     const listing = getListingById('raismes-t3')!;
-    expect(listing.rdvBailleur).toEqual({ name: 'Gabriel', phone: '07 81 15 45 03' });
+    expect(listing.rdvBailleur).toEqual({ name: 'Gabriel', phone: '07 81 15 45 03', email: 'lydstyl@gmail.com' });
     expect(listing.rdvHost).toBeUndefined();
   });
 
@@ -377,6 +378,52 @@ describe('bookRdv — réservation atomique (data/rdvs.json)', () => {
 
     const adjacent = await bookRdv(makeInput({ start: '2026-08-11T16:45:00.000Z' }), file);
     expect(adjacent.ok).toBe(true);
+  });
+
+  it('rejette un second créneau (différent) avec le même email sur la même annonce (ALREADY_BOOKED)', async () => {
+    const file = path.join(tmpDir, 'rdvs-already.json');
+    // Créneaux FUTURS réels (les dates août 2026 sont passées → ne bloqueraient pas)
+    const futur1 = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+    const futur2 = new Date(Date.now() + 9 * 24 * 60 * 60 * 1000).toISOString();
+
+    const first = await bookRdv(makeInput({ start: futur1 }), file);
+    expect(first.ok).toBe(true);
+
+    const second = await bookRdv(makeInput({ start: futur2 }), file);
+    expect(second.ok).toBe(false);
+    if (second.ok) return;
+    expect(second.reason).toBe('ALREADY_BOOKED');
+
+    // Toujours un seul RDV dans le fichier
+    const written = JSON.parse(await fs.readFile(file, 'utf-8'));
+    expect(written).toHaveLength(1);
+  });
+
+  it('autorise le même email sur une AUTRE annonce (blocage par annonce uniquement)', async () => {
+    const file = path.join(tmpDir, 'rdvs-other-listing.json');
+    const futur1 = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+    const futur2 = new Date(Date.now() + 8 * 24 * 60 * 60 * 1000).toISOString();
+
+    const first = await bookRdv(makeInput({ start: futur1 }), file); // appt5
+    expect(first.ok).toBe(true);
+
+    const other = await bookRdv(
+      makeInput({ listingId: 'raismes-t3', start: futur2 }),
+      file
+    );
+    expect(other.ok).toBe(true);
+  });
+
+  it('n applique pas l anti-doublon quand le RDV existant est PASSÉ (visite effectuée)', async () => {
+    const file = path.join(tmpDir, 'rdvs-past.json');
+    const past = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+    const future = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+
+    const old = await bookRdv(makeInput({ start: past }), file);
+    expect(old.ok).toBe(true);
+
+    const rebook = await bookRdv(makeInput({ start: future }), file);
+    expect(rebook.ok).toBe(true);
   });
 });
 
@@ -700,5 +747,45 @@ describe('isSlotAvailable — schedule', () => {
 
   it('retourne false pour un horaire qui n est pas un début de créneau (18h45 Paris dimanche)', () => {
     expect(isSlotAvailable(scheduleConfig, '2026-08-09T16:45:00.000Z', [])).toBe(false);
+  });
+});
+
+// ============ Anti-doublon : hasExistingBooking (1 RDV futur max par email + annonce) ============
+
+describe('hasExistingBooking — un même email ne peut avoir qu un RDV FUTUR par annonce', () => {
+  const now = new Date('2026-09-01T12:00:00.000Z');
+
+  it('retourne true si un RDV futur existe pour le même email + même annonce', () => {
+    const rdvs = [makeRdv({ end: '2026-09-15T17:00:00.000Z' })]; // futur
+    expect(hasExistingBooking(rdvs, 'appt5', 'jean@example.com', now)).toBe(true);
+  });
+
+  it('retourne false si le RDV existant est passé (visite effectuée ne bloque pas)', () => {
+    const rdvs = [makeRdv({ end: '2026-08-15T17:00:00.000Z' })]; // passé
+    expect(hasExistingBooking(rdvs, 'appt5', 'jean@example.com', now)).toBe(false);
+  });
+
+  it('retourne false si le RDV se termine exactement à now (strictement futur requis)', () => {
+    const rdvs = [makeRdv({ end: '2026-09-01T12:00:00.000Z' })];
+    expect(hasExistingBooking(rdvs, 'appt5', 'jean@example.com', now)).toBe(false);
+  });
+
+  it('retourne false pour le même email sur une autre annonce', () => {
+    const rdvs = [makeRdv({ listingId: 'raismes-t3', end: '2026-09-15T17:00:00.000Z' })];
+    expect(hasExistingBooking(rdvs, 'appt5', 'jean@example.com', now)).toBe(false);
+  });
+
+  it('retourne false si l email est différent', () => {
+    const rdvs = [makeRdv({ email: 'autre@example.com', end: '2026-09-15T17:00:00.000Z' })];
+    expect(hasExistingBooking(rdvs, 'appt5', 'jean@example.com', now)).toBe(false);
+  });
+
+  it('est insensible à la casse et aux espaces autour de l email', () => {
+    const rdvs = [makeRdv({ email: ' Jean@Example.COM ', end: '2026-09-15T17:00:00.000Z' })];
+    expect(hasExistingBooking(rdvs, 'appt5', 'jean@example.com', now)).toBe(true);
+  });
+
+  it('tableau vide → false', () => {
+    expect(hasExistingBooking([], 'appt5', 'jean@example.com', now)).toBe(false);
   });
 });
