@@ -73,11 +73,10 @@ export async function POST(request: NextRequest) {
     if (!result.ok) {
       if (result.reason === 'ALREADY_BOOKED') {
         const bailleurEmail = listing.rdvBailleur?.email ?? process.env.EMAIL_TO ?? 'lydstyl@gmail.com';
-        const bailleurPhone = listing.rdvBailleur?.phone;
         return NextResponse.json(
           {
             code: 'ALREADY_BOOKED',
-            error: `Vous avez déjà réservé un créneau de visite pour ce logement. Pour le modifier ou l'annuler, écrivez à ${bailleurEmail} ou appelez le ${bailleurPhone}.`,
+            error: `Vous avez déjà réservé un créneau de visite pour ce logement. Pour le modifier ou l'annuler, écrivez à ${bailleurEmail}.`,
           },
           { status: 409 }
         );

@@ -70,20 +70,19 @@ export default function RdvBookingForm({
     setSubmitting(true);
     try {
       const formData = new FormData(e.currentTarget);
+      // redirect: 'follow' (défaut) : le navigateur suit le 303 de succès vers
+      // l'écran de confirmation. NE PAS utiliser 'manual' : une réponse de
+      // redirection est alors exposée en opaqueredirect (status 0, headers
+      // masqués) → le succès s'afficherait comme une erreur (bug 30/08/2026).
       const res = await fetch('/api/rdv', {
         method: 'POST',
         body: formData,
-        redirect: 'manual',
       });
 
-      // Succès : l'API répond par une redirection 303 vers l'écran de confirmation.
-      if (res.status === 303) {
-        const location = res.headers.get('Location');
-        window.location.href = location ?? '/';
-        return;
-      }
+      // Succès : le 303 a été suivi → res.url = URL finale de la page de
+      // confirmation (?confirmed=1&start=...&prenom=...).
       if (res.ok) {
-        window.location.href = '/';
+        window.location.href = res.url || '/';
         return;
       }
 

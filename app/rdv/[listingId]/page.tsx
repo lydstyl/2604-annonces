@@ -82,8 +82,7 @@ function ConfirmationScreen({
             </p>
             <p className="text-gray-700 mt-2">
               Pour modifier ou annuler ce rendez-vous, écrivez à{' '}
-              <strong>{listing.rdvBailleur?.email ?? 'lydstyl@gmail.com'}</strong> ou appelez le{' '}
-              <strong>{listing.rdvBailleur?.phone}</strong>.
+              <strong>{listing.rdvBailleur?.email ?? 'lydstyl@gmail.com'}</strong>.
             </p>
             {listing.rdvHost && (
               <p className="text-gray-700 mt-2">

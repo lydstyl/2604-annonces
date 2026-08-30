@@ -72,7 +72,7 @@ describe('sendRdvNotificationEmail — destinataires de la notification', () => 
 // ============ sendRdvConfirmationEmail — coordonnées de contact dans la confirmation ============
 
 describe('sendRdvConfirmationEmail — coordonnées visibles (même sans Google Calendar)', () => {
-  it('T2 appt5 : email + téléphone Gabriel ET téléphone du locataire (Janot) dans text ET html', async () => {
+  it('T2 appt5 : email Gabriel (SANS téléphone bailleur) ET téléphone du locataire (Janot) dans text ET html', async () => {
     await sendRdvConfirmationEmail(makeRdv(), appt5);
 
     expect(emailMocks.sendMail).toHaveBeenCalledTimes(1);
@@ -80,20 +80,20 @@ describe('sendRdvConfirmationEmail — coordonnées visibles (même sans Google 
     const all = `${mailOptions.text}\n${mailOptions.html}`;
 
     expect(all).toContain('lydstyl@gmail.com');
-    expect(all).toContain('07 81 15 45 03');
+    expect(all).not.toContain('07 81 15 45 03');
     expect(all).toContain('M. Janot');
     expect(all).toContain('07 68 34 97 79');
     expect(all).toContain('modifier ou annuler');
   });
 
-  it('T3 raismes-t3 : email + téléphone Gabriel, PAS le téléphone du locataire (pas de rdvHost)', async () => {
+  it('T3 raismes-t3 : email Gabriel uniquement, PAS de téléphone bailleur ni locataire', async () => {
     await sendRdvConfirmationEmail(makeRdv(), raismesT3);
 
     const [mailOptions] = emailMocks.sendMail.mock.calls[0];
     const all = `${mailOptions.text}\n${mailOptions.html}`;
 
     expect(all).toContain('lydstyl@gmail.com');
-    expect(all).toContain('07 81 15 45 03');
+    expect(all).not.toContain('07 81 15 45 03');
     expect(all).not.toContain('07 68 34 97 79');
     expect(all).not.toContain('M. Janot');
   });

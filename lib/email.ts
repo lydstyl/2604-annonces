@@ -135,12 +135,14 @@ export async function sendRdvConfirmationEmail(rdv: Rdv, listing: Listing) {
   const rdvDateTime = formatRdvDateTime(rdv.start, timezone);
   const dureeMinutes = listing.rdv?.durationMinutes ?? 15;
 
-  // Coordonnées de contact : bailleur (Gabriel) dans la confirmation pour que le
-  // candidat puisse modifier/annuler — même sans Google Calendar (cas T2 : la visite
-  // est assurée par le locataire actuel, le candidat doit pouvoir le joindre).
+  // Coordonnées de contact : email du bailleur (Gabriel) dans la confirmation
+  // pour que le candidat puisse modifier/annuler — même sans Google Calendar
+  // (cas T2 : la visite est assurée par le locataire actuel, le candidat doit
+  // pouvoir le joindre). Le téléphone du bailleur n'est PLUS affiché aux
+  // candidats (règle Gabriel 30/08/2026 : pas de contact téléphonique pour la
+  // modification des rendez-vous).
   const bailleurEmail = listing.rdvBailleur?.email ?? process.env.EMAIL_TO ?? 'lydstyl@gmail.com';
-  const bailleurPhone = listing.rdvBailleur?.phone;
-  const contactLine = `Pour modifier ou annuler ce rendez-vous, écrivez à ${bailleurEmail} ou appelez le ${bailleurPhone}.`;
+  const contactLine = `Pour modifier ou annuler ce rendez-vous, écrivez à ${bailleurEmail}.`;
   const hostLine = listing.rdvHost
     ? `ℹ️ La visite est assurée par ${listing.rdvHost.name} : merci de le prévenir de votre arrivée au ${listing.rdvHost.phone}.`
     : '';
