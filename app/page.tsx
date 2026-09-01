@@ -1,8 +1,14 @@
 import Link from 'next/link';
-import { getListingCards } from '@/lib/listings';
+import { getActiveListingCards } from '@/lib/listings';
+import { getPausedListingIds } from '@/lib/pause';
 
-export default function Home() {
-  const cards = getListingCards();
+// Dynamique : le statut pause (data/paused-listings.json) doit être relu à
+// chaque requête — pas de rendu statique au build (pas de force-static).
+export const dynamic = 'force-dynamic';
+
+export default async function Home() {
+  const pausedIds = await getPausedListingIds();
+  const cards = getActiveListingCards(pausedIds);
 
   return (
     <div className="min-h-screen bg-gray-50 py-10">
@@ -18,6 +24,13 @@ export default function Home() {
         </header>
 
         {/* Grille de cartes */}
+        {cards.length === 0 ? (
+          <div className="text-center py-16 text-gray-500">
+            <div className="text-5xl mb-4">🏠</div>
+            <p className="text-xl font-semibold text-gray-700 mb-1">Aucune annonce disponible</p>
+            <p>Nos logements sont temporairement indisponibles — revenez prochainement !</p>
+          </div>
+        ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
           {cards.map((card) => (
             <article
@@ -79,6 +92,7 @@ export default function Home() {
             </article>
           ))}
         </div>
+        )}
       </div>
     </div>
   );

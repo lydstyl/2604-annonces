@@ -1,19 +1,16 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import { getListingById, getAllListings } from '@/lib/listings';
+import { getListingById } from '@/lib/listings';
+import { isListingPaused } from '@/lib/pause';
 import ImageCarousel from '@/components/ImageCarousel';
 import VideoEmbed from '@/components/VideoEmbed';
 import MapEmbed from '@/components/MapEmbed';
 import FAQSection from '@/components/FAQSection';
 import ChatWidget from '@/components/ChatWidget';
 
-// Génération statique des pages pour toutes les annonces
-export async function generateStaticParams() {
-  const listings = getAllListings();
-  return listings.map((listing) => ({
-    id: listing.id,
-  }));
-}
+// Dynamique : le statut pause (data/paused-listings.json) doit être relu à
+// chaque requête — pas de rendu statique au build (pas de force-static).
+export const dynamic = 'force-dynamic';
 
 // Métadonnées dynamiques
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
@@ -40,9 +37,23 @@ export default async function AnnoncePage({ params }: { params: Promise<{ id: st
     notFound();
   }
 
+  const paused = await isListingPaused(id);
+
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="container-custom">
+        {/* Bandeau annonce en pause (visible à la place du formulaire de candidature) */}
+        {paused && (
+          <div className="mb-8 rounded-xl bg-red-50 border-2 border-red-300 p-6 text-center">
+            <p className="text-2xl mb-1">⏸️</p>
+            <h2 className="text-xl font-bold text-red-800 mb-1">Annonce en pause</h2>
+            <p className="text-red-700">
+              Cette annonce est temporairement retirée de la location : le formulaire de
+              candidature est désactivé. Revenez prochainement !
+            </p>
+          </div>
+        )}
+
         {/* En-tête */}
         <div className="mb-8">
           <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-2">
@@ -141,23 +152,25 @@ export default async function AnnoncePage({ params }: { params: Promise<{ id: st
           </section>
         )}
 
-        {/* CTA */}
-        <div className="sticky bottom-8 z-10">
-          <div className="card p-6 bg-gradient-to-r from-primary-600 to-primary-700 text-white shadow-2xl">
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-              <div>
-                <h3 className="text-xl font-bold mb-1">Intéressé par ce logement ?</h3>
-                <p className="text-primary-100">Remplissez le formulaire de candidature en quelques minutes</p>
+        {/* CTA — masqué si l'annonce est en pause (aucun formulaire de candidature) */}
+        {!paused && (
+          <div className="sticky bottom-8 z-10">
+            <div className="card p-6 bg-gradient-to-r from-primary-600 to-primary-700 text-white shadow-2xl">
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div>
+                  <h3 className="text-xl font-bold mb-1">Intéressé par ce logement ?</h3>
+                  <p className="text-primary-100">Remplissez le formulaire de candidature en quelques minutes</p>
+                </div>
+                <Link
+                  href={`/candidature/${listing.id}`}
+                  className="bg-white text-primary-700 hover:bg-gray-100 font-bold py-4 px-8 rounded-lg transition-colors shadow-lg whitespace-nowrap"
+                >
+                  Je suis intéressé →
+                </Link>
               </div>
-              <Link
-                href={`/candidature/${listing.id}`}
-                className="bg-white text-primary-700 hover:bg-gray-100 font-bold py-4 px-8 rounded-lg transition-colors shadow-lg whitespace-nowrap"
-              >
-                Je suis intéressé →
-              </Link>
             </div>
           </div>
-        </div>
+        )}
 
         {/* Chatbot */}
         <ChatWidget listingId={listing.id} />

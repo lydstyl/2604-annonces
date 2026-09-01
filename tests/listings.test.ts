@@ -46,11 +46,12 @@ describe('Structure des listings', () => {
 describe('Listing raismes-t3', () => {
   const listing = getListingById('raismes-t3');
 
-  it('existe avec le bon loyer (630 € + 35 € charges = 665 € CC)', () => {
+  it('existe avec le bon loyer (630 € + 48 € charges = 678 € CC)', () => {
     expect(listing).toBeDefined();
     expect(listing!.price.rent).toBe(630);
-    expect(listing!.price.charges).toBe(35);
+    expect(listing!.price.charges).toBe(48);
     expect(listing!.price.deposit).toBe(630);
+    expect(listing!.price.rent + listing!.price.charges).toBe(678);
   });
 
   it('contient la FAQ "Quelles sont les conditions pour obtenir ce logement ?"', () => {
@@ -61,17 +62,57 @@ describe('Listing raismes-t3', () => {
     expect(faq).toBeDefined();
   });
 
-  it('la FAQ conditions reprend les critères GLI (33 %, 2 016 €, Visale, 1 995 €)', () => {
+  it('la FAQ conditions reprend les critères GLI (33 %, 2 055 €, Visale, 2 034 €)', () => {
     const faq = listing!.faq.find(
       (item) => item.question === 'Quelles sont les conditions pour obtenir ce logement ?'
     );
     const answer = faq!.answer;
     expect(answer).toContain('33 %');
-    expect(answer).toContain('2 016');
+    expect(answer).toContain('2 055');
     expect(answer).toContain('Visale');
-    expect(answer).toContain('1 995');
+    expect(answer).toContain('2 034');
+    expect(answer).toContain('678');
     expect(answer).toContain('CDI');
     expect(answer).toContain('CAF');
+  });
+
+  it('la FAQ revenus est corrigée : 2 034 € (678 € × 3), plus aucune mention de l erreur 1 935 €', () => {
+    const faq = listing!.faq.find(
+      (item) => item.question === 'Quel est le montant minimum de revenus requis ?'
+    );
+    expect(faq).toBeDefined();
+    expect(faq!.answer).toContain('2 034');
+    expect(faq!.answer).toContain('678 € × 3');
+    expect(faq!.answer).not.toContain('1 935');
+  });
+
+  it('la FAQ garant reprend le seuil corrigé de 2 034 €', () => {
+    const faq = listing!.faq.find(
+      (item) => item.question === 'Le garant est-il obligatoire ?'
+    );
+    expect(faq).toBeDefined();
+    expect(faq!.answer).toContain('2 034');
+    expect(faq!.answer).not.toContain('1 935');
+  });
+
+  it('la FAQ charges détaille 48 €/mois (eau froide 27,63 € + taxe ordures ménagères 20,46 €)', () => {
+    const faq = listing!.faq.find(
+      (item) => item.question === 'Les charges incluent quoi ?'
+    );
+    expect(faq).toBeDefined();
+    expect(faq!.answer).toContain('48 €');
+    expect(faq!.answer).toContain('27,63');
+    expect(faq!.answer).toContain('20,46');
+  });
+
+  it('la FAQ GLI (critères assurance) est alignée sur 678 € CC / 2 055 €', () => {
+    const faq = listing!.faq.find(
+      (item) => item.question.includes('critères et pièces demandées')
+    );
+    expect(faq).toBeDefined();
+    expect(faq!.answer).toContain('678');
+    expect(faq!.answer).toContain('2 055');
+    expect(faq!.answer).not.toContain('2 016');
   });
 });
 

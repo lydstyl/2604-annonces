@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { getListingById } from '@/lib/listings';
 
 // Types
 interface Candidature {
@@ -20,6 +21,14 @@ interface Candidature {
   pseudoSource?: string;
   sourceId?: string;
   statut?: string;
+}
+
+// Statut pause d'une annonce (résumé renvoyé par /api/admin/pause)
+interface PauseListing {
+  id: string;
+  title: string;
+  type: string;
+  paused: boolean;
 }
 
 // Source badge colors
@@ -50,6 +59,22 @@ export default function AdminPage() {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const [pauseListings, setPauseListings] = useState<PauseListing[]>([]);
+  const [pausingId, setPausingId] = useState<string | null>(null);
+
+  const fetchPauseStatus = useCallback(async () => {
+    try {
+      const res = await fetch('/api/admin/pause', {
+        headers: { 'x-admin-auth': password },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setPauseListings(data.listings);
+      }
+    } catch (err) {
+      console.error('Error fetching pause status:', err);
+    }
+  }, [password]);
 
   const fetchCandidatures = useCallback(async () => {
     setLoading(true);
@@ -69,7 +94,8 @@ export default function AdminPage() {
 
   const fetchData = useCallback(() => {
     fetchCandidatures();
-  }, [fetchCandidatures]);
+    fetchPauseStatus();
+  }, [fetchCandidatures, fetchPauseStatus]);
 
   useEffect(() => {
     if (authenticated) {
@@ -134,6 +160,27 @@ export default function AdminPage() {
     } catch (err) {
       console.error('Error updating candidature:', err);
     }
+  };
+
+  const handleTogglePause = async (id: string, paused: boolean) => {
+    setPausingId(id);
+    try {
+      const res = await fetch('/api/admin/pause', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-admin-auth': password,
+        },
+        body: JSON.stringify({ id, paused }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setPauseListings(data.listings);
+      }
+    } catch (err) {
+      console.error('Error toggling pause:', err);
+    }
+    setPausingId(null);
   };
 
   // Login screen
@@ -205,6 +252,46 @@ export default function AdminPage() {
 
       {/* Content */}
       <div className="container-custom py-6">
+        {/* Gestion des annonces : pause / reprise */}
+        <section className="mb-8">
+          <h2 className="text-xl font-bold text-gray-900 mb-4">🏠 Annonces</h2>
+          <div className="space-y-3">
+            {pauseListings.map((l) => (
+              <div
+                key={l.id}
+                className="card p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+              >
+                <div className="flex items-center gap-3 min-w-0">
+                  <span
+                    className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+                      l.paused ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'
+                    }`}
+                  >
+                    {l.paused ? '⏸️ En pause' : '● En ligne'}
+                  </span>
+                  <div className="min-w-0">
+                    <p className="font-semibold text-gray-900 truncate">{l.title}</p>
+                    <p className="text-sm text-gray-500">
+                      {l.type} • /annonce/{l.id}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => handleTogglePause(l.id, !l.paused)}
+                  disabled={pausingId === l.id}
+                  className={`text-sm px-4 py-2 rounded-lg font-medium transition-colors disabled:opacity-50 whitespace-nowrap ${
+                    l.paused
+                      ? 'bg-green-600 text-white hover:bg-green-700'
+                      : 'border border-red-300 text-red-600 hover:bg-red-50'
+                  }`}
+                >
+                  {pausingId === l.id ? '⏳' : l.paused ? '▶️ Remettre en ligne' : '⏸️ Mettre en pause'}
+                </button>
+              </div>
+            ))}
+          </div>
+        </section>
+
         {loading && candidatures.length === 0 ? (
           <div className="text-center py-12 text-gray-500">
             <div className="text-4xl mb-3">⏳</div>
@@ -221,6 +308,11 @@ export default function AdminPage() {
             {candidatures.map((c) => {
               const cst = c.statut ? (candidatureStatutBadge[c.statut] || candidatureStatutBadge.nouveau) : null;
               const csrc = c.source ? (sourceBadge[c.source] || sourceBadge.autre) : null;
+              // Seuil 3× loyer CC propre à l'annonce de la candidature (raismes-t3 : 2 034 €, appt5 : 1 650 €)
+              const listing = getListingById(c.listingId);
+              const seuil3x = listing ? (listing.price.rent + listing.price.charges) * 3 : null;
+              const seuil3xLabel = seuil3x !== null ? seuil3x.toLocaleString('fr-FR') : '—';
+              const atteintSeuil3x = seuil3x !== null && c.revenusMenuels >= seuil3x;
               return (
                 <div key={c.id} className="card overflow-hidden">
                   {/* Card header */}
@@ -235,7 +327,7 @@ export default function AdminPage() {
                             {c.prenom} {c.nom}
                           </span>
                           <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
-                            c.revenusMenuels >= 1935
+                            atteintSeuil3x
                               ? 'bg-green-100 text-green-800'
                               : c.revenusMenuels >= 1500
                               ? 'bg-yellow-100 text-yellow-800'
@@ -293,11 +385,13 @@ export default function AdminPage() {
                           <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Revenus mensuels nets</p>
                           <p className="font-medium">{c.revenusMenuels.toLocaleString('fr-FR')} €</p>
                           <p className={`text-xs mt-0.5 ${
-                            c.revenusMenuels >= 1935 ? 'text-green-600' : 'text-red-600'
+                            atteintSeuil3x ? 'text-green-600' : 'text-red-600'
                           }`}>
-                            {c.revenusMenuels >= 1935
-                              ? `≥ 3× loyer CC (1 935 €) ✓`
-                              : `< 3× loyer CC (1 935 €) — ${Math.round((c.revenusMenuels / 1935) * 100)}% du seuil`}
+                            {seuil3x === null
+                              ? 'Annonce inconnue — seuil non calculable'
+                              : atteintSeuil3x
+                              ? `≥ 3× loyer CC (${seuil3xLabel} €) ✓`
+                              : `< 3× loyer CC (${seuil3xLabel} €) — ${Math.round((c.revenusMenuels / seuil3x) * 100)}% du seuil`}
                           </p>
                         </div>
                         <div>

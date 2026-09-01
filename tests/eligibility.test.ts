@@ -4,17 +4,30 @@ import {
   computeThresholds,
   GLI_MIN_REVENUS,
   VISALE_MIN_REVENUS,
+  LOYER_CC_T3 as LOYER_CC_T3_SOURCE,
 } from '../lib/eligibility';
+import { getListingById } from '../lib/listings';
 
 // Loyer CC de chaque annonce
-const LOYER_CC_T3 = 665;
+const LOYER_CC_T3 = 678;
 const LOYER_CC_APPT5 = 550;
 
+describe('LOYER_CC_T3 — cohérence avec la source de vérité (lib/listings.ts)', () => {
+  it('dérive du prix de l annonce raismes-t3 (630 € + 48 € charges = 678 € CC)', () => {
+    const listing = getListingById('raismes-t3')!;
+    expect(listing).toBeDefined();
+    expect(listing.price.rent).toBe(630);
+    expect(listing.price.charges).toBe(48);
+    expect(LOYER_CC_T3_SOURCE).toBe(listing.price.rent + listing.price.charges);
+    expect(LOYER_CC_T3_SOURCE).toBe(678);
+  });
+});
+
 describe('computeThresholds — seuils dynamiques par annonce', () => {
-  it('calcule les seuils du T3 (665 € CC) : GLI 2016, Visale 1995', () => {
+  it('calcule les seuils du T3 (678 € CC) : GLI 2055, Visale 2034', () => {
     const t = computeThresholds(LOYER_CC_T3);
-    expect(t.gliMinRevenus).toBe(2016);
-    expect(t.visaleMinRevenus).toBe(1995);
+    expect(t.gliMinRevenus).toBe(2055);
+    expect(t.visaleMinRevenus).toBe(2034);
   });
 
   it('calcule les seuils de appt5 (550 € CC) : GLI 1667, Visale 1650', () => {
@@ -24,46 +37,46 @@ describe('computeThresholds — seuils dynamiques par annonce', () => {
   });
 });
 
-describe('isEligibleVisitRdv — auto-email RDV (raismes-t3, 665 € CC)', () => {
-  it('accepte un CDI avec revenus >= seuil GLI (2016 €)', () => {
+describe('isEligibleVisitRdv — auto-email RDV (raismes-t3, 678 € CC)', () => {
+  it('accepte un CDI avec revenus >= seuil GLI (2055 €)', () => {
     expect(
       isEligibleVisitRdv({ cdiPlus3Mois: true, revenusMenuels: 2200, peutFournirGarant: false }, LOYER_CC_T3)
     ).toBe(true);
   });
 
-  it('accepte un CDI à la borne exacte du seuil GLI (2016 €)', () => {
+  it('accepte un CDI à la borne exacte du seuil GLI (2055 €)', () => {
     expect(
       isEligibleVisitRdv({ cdiPlus3Mois: true, revenusMenuels: GLI_MIN_REVENUS, peutFournirGarant: false }, LOYER_CC_T3)
     ).toBe(true);
   });
 
-  it('refuse un CDI juste sous le seuil GLI sans garant (2015 €)', () => {
+  it('refuse un CDI juste sous le seuil GLI sans garant (2054 €)', () => {
     expect(
-      isEligibleVisitRdv({ cdiPlus3Mois: true, revenusMenuels: 2015, peutFournirGarant: false }, LOYER_CC_T3)
+      isEligibleVisitRdv({ cdiPlus3Mois: true, revenusMenuels: 2054, peutFournirGarant: false }, LOYER_CC_T3)
     ).toBe(false);
   });
 
-  it('accepte un CDI entre 1995 et 2016 avec garant (garantie Visale)', () => {
+  it('accepte un CDI entre 2034 et 2055 avec garant (garantie Visale)', () => {
     expect(
-      isEligibleVisitRdv({ cdiPlus3Mois: true, revenusMenuels: 1995, peutFournirGarant: true }, LOYER_CC_T3)
+      isEligibleVisitRdv({ cdiPlus3Mois: true, revenusMenuels: 2050, peutFournirGarant: true }, LOYER_CC_T3)
     ).toBe(true);
   });
 
-  it('accepte un CDI à la borne exacte du seuil Visale avec garant (1995 €)', () => {
+  it('accepte un CDI à la borne exacte du seuil Visale avec garant (2034 €)', () => {
     expect(
       isEligibleVisitRdv({ cdiPlus3Mois: true, revenusMenuels: VISALE_MIN_REVENUS, peutFournirGarant: true }, LOYER_CC_T3)
     ).toBe(true);
   });
 
-  it('refuse un CDI entre 1995 et 2016 sans garant', () => {
+  it('refuse un CDI entre 2034 et 2055 sans garant', () => {
     expect(
-      isEligibleVisitRdv({ cdiPlus3Mois: true, revenusMenuels: 1995, peutFournirGarant: false }, LOYER_CC_T3)
+      isEligibleVisitRdv({ cdiPlus3Mois: true, revenusMenuels: 2050, peutFournirGarant: false }, LOYER_CC_T3)
     ).toBe(false);
   });
 
-  it('refuse un CDI sous le seuil Visale même avec garant (1994 €)', () => {
+  it('refuse un CDI sous le seuil Visale même avec garant (2033 €)', () => {
     expect(
-      isEligibleVisitRdv({ cdiPlus3Mois: true, revenusMenuels: 1994, peutFournirGarant: true }, LOYER_CC_T3)
+      isEligibleVisitRdv({ cdiPlus3Mois: true, revenusMenuels: 2033, peutFournirGarant: true }, LOYER_CC_T3)
     ).toBe(false);
   });
 
@@ -103,9 +116,9 @@ describe('isEligibleVisitRdv — auto-email RDV (raismes-t3, 665 € CC)', () =>
     ).toBe(false);
   });
 
-  it('n\'exige pas de garant au-dessus du seuil GLI (2016 €)', () => {
+  it('n\'exige pas de garant au-dessus du seuil GLI (2055 €)', () => {
     expect(
-      isEligibleVisitRdv({ cdiPlus3Mois: true, revenusMenuels: 2016, peutFournirGarant: false }, LOYER_CC_T3)
+      isEligibleVisitRdv({ cdiPlus3Mois: true, revenusMenuels: 2055, peutFournirGarant: false }, LOYER_CC_T3)
     ).toBe(true);
   });
 

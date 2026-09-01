@@ -148,7 +148,7 @@ export const listings: Record<string, Listing> = {
     },
     price: {
       rent: 630,
-      charges: 35,
+      charges: 48,
       deposit: 630
     },
     mediaDisclaimer: 'Les photos et vidéos ne sont pas forcément récentes. Des changements ont pu apparaître dans le logement comme une nouvelle peinture sur certains murs.',
@@ -173,7 +173,7 @@ export const listings: Record<string, Listing> = {
       {
         question: 'Quelles sont les conditions pour obtenir ce logement ?',
         answer:
-          "Voici les conditions d'acceptation de votre dossier, telles qu'exigées par l'assurance Garantie Loyers Impayés (GLI) :\n\n**✅ Critères de solvabilité**\n• **Revenus** : le loyer charges comprises (665 €/mois) doit représenter au maximum 33 % de vos revenus nets mensuels, soit des revenus d'au moins **~2 016 €/mois**\n• **Situation professionnelle** : CDI hors période d'essai ou fonctionnaire (un CDD avec au moins 12 mois restants peut être accepté si le taux d'effort est ≤ 25 %)\n• **Allocations CAF** : prises en compte à hauteur de 50 % maximum\n• **Exclusions** : demandeur d'emploi ou bénéficiaire du RSA exclu\n\n**📄 Dossier complet à fournir**\n1. Pièce d'identité (CNI ou passeport)\n2. 3 derniers bulletins de salaire\n3. Contrat de travail\n4. Dernier avis d'imposition\n5. Justificatif de domicile actuel\n6. RIB\n\n**💡 Alternative : garantie Visale**\nSi vos revenus sont inférieurs au seuil GLI, la garantie Visale (caution gratuite d'Action Logement) peut être acceptée en alternative. Les revenus doivent alors atteindre environ **3× le loyer, soit 1 995 €/mois**."
+          "Voici les conditions d'acceptation de votre dossier, telles qu'exigées par l'assurance Garantie Loyers Impayés (GLI) :\n\n**✅ Critères de solvabilité**\n• **Revenus** : le loyer charges comprises (678 €/mois) doit représenter au maximum 33 % de vos revenus nets mensuels, soit des revenus d'au moins **~2 055 €/mois**\n• **Situation professionnelle** : CDI hors période d'essai ou fonctionnaire (un CDD avec au moins 12 mois restants peut être accepté si le taux d'effort est ≤ 25 %)\n• **Allocations CAF** : prises en compte à hauteur de 50 % maximum\n• **Exclusions** : demandeur d'emploi ou bénéficiaire du RSA exclu\n\n**📄 Dossier complet à fournir**\n1. Pièce d'identité (CNI ou passeport)\n2. 3 derniers bulletins de salaire\n3. Contrat de travail\n4. Dernier avis d'imposition\n5. Justificatif de domicile actuel\n6. RIB\n\n**💡 Alternative : garantie Visale**\nSi vos revenus sont inférieurs au seuil GLI, la garantie Visale (caution gratuite d'Action Logement) peut être acceptée en alternative. Les revenus doivent alors atteindre environ **3× le loyer, soit 2 034 €/mois**."
       },
       {
         question: 'Quand puis-je visiter le logement ?',
@@ -218,17 +218,17 @@ export const listings: Record<string, Listing> = {
       {
         question: 'Les charges incluent quoi ?',
         answer:
-          "Les charges de 35€/mois couvrent l'entretien des parties communes et l'eau pour une personne. Ce montant augmente de 15 € par personne supplémentaire (couple ou famille avec enfant(s)). Les charges sont sujettes à régularisation annuelle en fonction de la consommation réelle. L'électricité et le gaz restent à la charge du locataire."
+          "Les charges de 48 €/mois (pour une personne) couvrent l'eau froide (27,63 €/mois) et la taxe d'ordures ménagères (20,46 €/mois). Les charges sont sujettes à régularisation annuelle en fonction de la consommation réelle. L'électricité et le gaz restent à la charge du locataire."
       },
       {
         question: 'Quel est le montant minimum de revenus requis ?',
         answer:
-          'Vos revenus nets mensuels doivent être au moins égaux à 3 fois le loyer charges comprises, soit 1 935 €/mois (665 € × 3). Si vos revenus sont inférieurs, un garant solvable peut compenser.'
+          'Vos revenus nets mensuels doivent être au moins égaux à 3 fois le loyer charges comprises, soit 2 034 €/mois (678 € × 3). Si vos revenus sont inférieurs, un garant solvable peut compenser.'
       },
       {
         question: 'Le garant est-il obligatoire ?',
         answer:
-          "Le garant n'est pas obligatoire si vos revenus atteignent au moins 3 fois le loyer charges comprises (1 935 €/mois). En revanche, si vos revenus sont inférieurs à ce seuil, un garant est fortement recommandé pour que votre dossier puisse être accepté."
+          "Le garant n'est pas obligatoire si vos revenus atteignent au moins 3 fois le loyer charges comprises (2 034 €/mois). En revanche, si vos revenus sont inférieurs à ce seuil, un garant est fortement recommandé pour que votre dossier puisse être accepté."
       },
       {
         question: 'Quelles sont les superficies des pièces ?',
@@ -238,7 +238,7 @@ export const listings: Record<string, Listing> = {
       {
         question: "Quels sont les critères et pièces demandées par l'assurance Garantie Loyers Impayés (GLI) ?",
         answer:
-          "Voici ce que l'assurance GLI exigera pour accepter votre dossier :\n\n**✅ Critères obligatoires**\n• **Revenus** : loyer CC ≤ 33 % des revenus nets mensuels du foyer\n• **Solvabilité** : revenus nets ≥ 3× le loyer charges comprises (soit ~2 016 € pour 665 €/mois)\n• **Contrat de travail** : CDI hors période d'essai (ou fonctionnaire titulaire, ou CDD si revenus très confortables)\n• **Garant** (recommandé) : revenus du garant ≥ 3× le loyer\n\n**📄 Pièces à fournir**\n1. Carte d'identité ou passeport\n2. Contrat de travail + justificatif de fin de période d'essai\n3. 3 dernières fiches de paie\n4. Dernier avis d'imposition ou avis de situation\n5. Justificatif de domicile actuel\n6. RIB pour le prélèvement des loyers\n7. Si garant : sa pièce d'identité + avis d'imposition + justificatif de domicile\n\n**⚠️ Motifs de refus fréquents**\n• CDD sans CDI derrière\n• Période d'essai en cours\n• Fichage Banque de France (interdit bancaire)\n• Ratio revenus/loyer > 33 %\n• Travailleur indépendant avec moins de 2 ans d'activité (sauf bilans solides)"
+          "Voici ce que l'assurance GLI exigera pour accepter votre dossier :\n\n**✅ Critères obligatoires**\n• **Revenus** : loyer CC ≤ 33 % des revenus nets mensuels du foyer\n• **Solvabilité** : revenus nets ≥ 3× le loyer charges comprises (soit ~2 055 € pour 678 €/mois)\n• **Contrat de travail** : CDI hors période d'essai (ou fonctionnaire titulaire, ou CDD si revenus très confortables)\n• **Garant** (recommandé) : revenus du garant ≥ 3× le loyer\n\n**📄 Pièces à fournir**\n1. Carte d'identité ou passeport\n2. Contrat de travail + justificatif de fin de période d'essai\n3. 3 dernières fiches de paie\n4. Dernier avis d'imposition ou avis de situation\n5. Justificatif de domicile actuel\n6. RIB pour le prélèvement des loyers\n7. Si garant : sa pièce d'identité + avis d'imposition + justificatif de domicile\n\n**⚠️ Motifs de refus fréquents**\n• CDD sans CDI derrière\n• Période d'essai en cours\n• Fichage Banque de France (interdit bancaire)\n• Ratio revenus/loyer > 33 %\n• Travailleur indépendant avec moins de 2 ans d'activité (sauf bilans solides)"
       }
     ]
   },
@@ -412,4 +412,10 @@ export function getListingCards(): ListingCard[] {
     location: listing.location,
     coverImage: listing.images.length > 0 ? listing.images[0] : null,
   }))
+}
+
+// Cartes des annonces ACTIVES pour la home page : exclut les annonces en pause
+// (statut persisté dans data/paused-listings.json, voir lib/pause.ts)
+export function getActiveListingCards(pausedIds: string[]): ListingCard[] {
+  return getListingCards().filter((card) => !pausedIds.includes(card.id))
 }
