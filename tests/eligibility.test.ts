@@ -1,181 +1,48 @@
 import { describe, it, expect } from 'vitest';
-import {
-  isEligibleVisitRdv,
-  computeThresholds,
-  GLI_MIN_REVENUS,
-  VISALE_MIN_REVENUS,
-  LOYER_CC_T3 as LOYER_CC_T3_SOURCE,
-} from '../lib/eligibility';
-import { getListingById } from '../lib/listings';
+import { isEligibleVisitRdv } from '../lib/eligibility';
 
-// Loyer CC de chaque annonce
-const LOYER_CC_T3 = 678;
-const LOYER_CC_APPT5 = 550;
+// Loyer CC de chaque annonce (seuil auto-email = 3× ce loyer, calculé dynamiquement)
+const LOYER_CC_T3 = 678; // raismes-t3 (630 € loyer + 48 € charges)
+const LOYER_CC_APPT5 = 550; // appt5
 
-describe('LOYER_CC_T3 — cohérence avec la source de vérité (lib/listings.ts)', () => {
-  it('dérive du prix de l annonce raismes-t3 (630 € + 48 € charges = 678 € CC)', () => {
-    const listing = getListingById('raismes-t3')!;
-    expect(listing).toBeDefined();
-    expect(listing.price.rent).toBe(630);
-    expect(listing.price.charges).toBe(48);
-    expect(LOYER_CC_T3_SOURCE).toBe(listing.price.rent + listing.price.charges);
-    expect(LOYER_CC_T3_SOURCE).toBe(678);
-  });
-});
-
-describe('computeThresholds — seuils dynamiques par annonce', () => {
-  it('calcule les seuils du T3 (678 € CC) : GLI 2055, Visale 2034', () => {
-    const t = computeThresholds(LOYER_CC_T3);
-    expect(t.gliMinRevenus).toBe(2055);
-    expect(t.visaleMinRevenus).toBe(2034);
+describe('isEligibleVisitRdv — règle unique : CDI > 3 mois ET revenus ≥ 3× loyer CC', () => {
+  it('accepte un CDI à la borne exacte 3× loyer CC du T3 (2034 €)', () => {
+    expect(isEligibleVisitRdv({ cdiPlus3Mois: true, revenusMenuels: 2034 }, LOYER_CC_T3)).toBe(true);
   });
 
-  it('calcule les seuils de appt5 (550 € CC) : GLI 1667, Visale 1650', () => {
-    const t = computeThresholds(LOYER_CC_APPT5);
-    expect(t.gliMinRevenus).toBe(1667);
-    expect(t.visaleMinRevenus).toBe(1650);
-  });
-});
-
-describe('isEligibleVisitRdv — auto-email RDV (raismes-t3, 678 € CC)', () => {
-  it('accepte un CDI avec revenus >= seuil GLI (2055 €)', () => {
-    expect(
-      isEligibleVisitRdv({ cdiPlus3Mois: true, revenusMenuels: 2200, peutFournirGarant: false }, LOYER_CC_T3)
-    ).toBe(true);
+  it('refuse un CDI juste sous 3× loyer CC du T3 (2033 €)', () => {
+    expect(isEligibleVisitRdv({ cdiPlus3Mois: true, revenusMenuels: 2033 }, LOYER_CC_T3)).toBe(false);
   });
 
-  it('accepte un CDI à la borne exacte du seuil GLI (2055 €)', () => {
-    expect(
-      isEligibleVisitRdv({ cdiPlus3Mois: true, revenusMenuels: GLI_MIN_REVENUS, peutFournirGarant: false }, LOYER_CC_T3)
-    ).toBe(true);
+  it('accepte un CDI à la borne exacte 3× loyer CC de appt5 (1650 €)', () => {
+    expect(isEligibleVisitRdv({ cdiPlus3Mois: true, revenusMenuels: 1650 }, LOYER_CC_APPT5)).toBe(true);
   });
 
-  it('refuse un CDI juste sous le seuil GLI sans garant (2054 €)', () => {
-    expect(
-      isEligibleVisitRdv({ cdiPlus3Mois: true, revenusMenuels: 2054, peutFournirGarant: false }, LOYER_CC_T3)
-    ).toBe(false);
+  it('refuse un CDI juste sous 3× loyer CC de appt5 (1649 €)', () => {
+    expect(isEligibleVisitRdv({ cdiPlus3Mois: true, revenusMenuels: 1649 }, LOYER_CC_APPT5)).toBe(false);
   });
 
-  it('accepte un CDI entre 2034 et 2055 avec garant (garantie Visale)', () => {
-    expect(
-      isEligibleVisitRdv({ cdiPlus3Mois: true, revenusMenuels: 2050, peutFournirGarant: true }, LOYER_CC_T3)
-    ).toBe(true);
+  it('accepte un CDI largement au-dessus du seuil T3 (2500 €)', () => {
+    expect(isEligibleVisitRdv({ cdiPlus3Mois: true, revenusMenuels: 2500 }, LOYER_CC_T3)).toBe(true);
   });
 
-  it('accepte un CDI à la borne exacte du seuil Visale avec garant (2034 €)', () => {
-    expect(
-      isEligibleVisitRdv({ cdiPlus3Mois: true, revenusMenuels: VISALE_MIN_REVENUS, peutFournirGarant: true }, LOYER_CC_T3)
-    ).toBe(true);
-  });
-
-  it('refuse un CDI entre 2034 et 2055 sans garant', () => {
-    expect(
-      isEligibleVisitRdv({ cdiPlus3Mois: true, revenusMenuels: 2050, peutFournirGarant: false }, LOYER_CC_T3)
-    ).toBe(false);
-  });
-
-  it('refuse un CDI sous le seuil Visale même avec garant (2033 €)', () => {
-    expect(
-      isEligibleVisitRdv({ cdiPlus3Mois: true, revenusMenuels: 2033, peutFournirGarant: true }, LOYER_CC_T3)
-    ).toBe(false);
-  });
-
-  it('refuse sans CDI même avec revenus élevés', () => {
-    expect(
-      isEligibleVisitRdv({ cdiPlus3Mois: false, revenusMenuels: 5000, peutFournirGarant: true }, LOYER_CC_T3)
-    ).toBe(false);
-  });
-
-  it('refuse sans CDI même avec un garant', () => {
-    expect(
-      isEligibleVisitRdv({ cdiPlus3Mois: false, revenusMenuels: 2500, peutFournirGarant: true }, LOYER_CC_T3)
-    ).toBe(false);
-  });
-
-  it('refuse avec CDI mais revenus à 0', () => {
-    expect(
-      isEligibleVisitRdv({ cdiPlus3Mois: true, revenusMenuels: 0, peutFournirGarant: true }, LOYER_CC_T3)
-    ).toBe(false);
+  it('refuse sans CDI même avec des revenus très élevés (9999 €)', () => {
+    expect(isEligibleVisitRdv({ cdiPlus3Mois: false, revenusMenuels: 9999 }, LOYER_CC_T3)).toBe(false);
   });
 
   it('refuse si cdiPlus3Mois est undefined (champ non renseigné)', () => {
-    expect(
-      isEligibleVisitRdv({ cdiPlus3Mois: undefined, revenusMenuels: 3000, peutFournirGarant: true }, LOYER_CC_T3)
-    ).toBe(false);
+    expect(isEligibleVisitRdv({ cdiPlus3Mois: undefined, revenusMenuels: 9999 }, LOYER_CC_T3)).toBe(false);
   });
 
   it('refuse si revenusMenuels est NaN', () => {
-    expect(
-      isEligibleVisitRdv({ cdiPlus3Mois: true, revenusMenuels: NaN, peutFournirGarant: true }, LOYER_CC_T3)
-    ).toBe(false);
+    expect(isEligibleVisitRdv({ cdiPlus3Mois: true, revenusMenuels: NaN }, LOYER_CC_T3)).toBe(false);
   });
 
-  it('refuse si revenusMenuels est négatif', () => {
-    expect(
-      isEligibleVisitRdv({ cdiPlus3Mois: true, revenusMenuels: -100, peutFournirGarant: true }, LOYER_CC_T3)
-    ).toBe(false);
+  it('refuse si revenusMenuels est négatif (-100 €)', () => {
+    expect(isEligibleVisitRdv({ cdiPlus3Mois: true, revenusMenuels: -100 }, LOYER_CC_T3)).toBe(false);
   });
 
-  it('n\'exige pas de garant au-dessus du seuil GLI (2055 €)', () => {
-    expect(
-      isEligibleVisitRdv({ cdiPlus3Mois: true, revenusMenuels: 2055, peutFournirGarant: false }, LOYER_CC_T3)
-    ).toBe(true);
-  });
-
-  it('accepte une garantie Visale seule, sans CDI', () => {
-    expect(
-      isEligibleVisitRdv({ garantieVisale: true, cdiPlus3Mois: false, revenusMenuels: 0, peutFournirGarant: false }, LOYER_CC_T3)
-    ).toBe(true);
-  });
-
-  it('accepte une garantie Visale avec revenus faibles (1200 €)', () => {
-    expect(
-      isEligibleVisitRdv({ garantieVisale: true, cdiPlus3Mois: false, revenusMenuels: 1200, peutFournirGarant: false }, LOYER_CC_T3)
-    ).toBe(true);
-  });
-
-  it('refuse sans garantie Visale ni CDI', () => {
-    expect(
-      isEligibleVisitRdv({ garantieVisale: false, cdiPlus3Mois: false, revenusMenuels: 1200, peutFournirGarant: false }, LOYER_CC_T3)
-    ).toBe(false);
-  });
-});
-
-describe('isEligibleVisitRdv — appt5 (T2, 550 € CC, seuils 1667/1650)', () => {
-  it('accepte un CDI au seuil GLI appt5 (1667 €)', () => {
-    expect(
-      isEligibleVisitRdv({ cdiPlus3Mois: true, revenusMenuels: 1667, peutFournirGarant: false }, LOYER_CC_APPT5)
-    ).toBe(true);
-  });
-
-  it('refuse un CDI juste sous le seuil GLI appt5 sans garant (1666 €)', () => {
-    expect(
-      isEligibleVisitRdv({ cdiPlus3Mois: true, revenusMenuels: 1666, peutFournirGarant: false }, LOYER_CC_APPT5)
-    ).toBe(false);
-  });
-
-  it('accepte un CDI au seuil Visale appt5 avec garant (1650 €)', () => {
-    expect(
-      isEligibleVisitRdv({ cdiPlus3Mois: true, revenusMenuels: 1650, peutFournirGarant: true }, LOYER_CC_APPT5)
-    ).toBe(true);
-  });
-
-  it('accepte une garantie Visale seule pour appt5', () => {
-    expect(
-      isEligibleVisitRdv({ garantieVisale: true, cdiPlus3Mois: false, revenusMenuels: 800, peutFournirGarant: false }, LOYER_CC_APPT5)
-    ).toBe(true);
-  });
-
-  it('accepte un CDI à 1700 € sans garant (≥ seuil GLI appt5 de 1667 €)', () => {
-    // 1700 ≥ 1667 (seuil GLI appt5) → éligible même sans garant
-    expect(
-      isEligibleVisitRdv({ cdiPlus3Mois: true, revenusMenuels: 1700, peutFournirGarant: false }, LOYER_CC_APPT5)
-    ).toBe(true);
-  });
-
-  it('refuse un revenu de 2000 € sans CDI (même au-dessus du seuil GLI)', () => {
-    expect(
-      isEligibleVisitRdv({ cdiPlus3Mois: false, revenusMenuels: 2000, peutFournirGarant: true }, LOYER_CC_APPT5)
-    ).toBe(false);
+  it('refuse si revenusMenuels est à 0', () => {
+    expect(isEligibleVisitRdv({ cdiPlus3Mois: true, revenusMenuels: 0 }, LOYER_CC_T3)).toBe(false);
   });
 });

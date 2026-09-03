@@ -74,18 +74,16 @@ export async function POST(
       // On continue même si l'email échoue (la candidature est déjà sauvegardée)
     }
 
-    // Auto-email RDV : si le candidat est éligible (garantie Visale, ou CDI > 3 mois +
-    // revenus ≥ seuil GLI, ou revenus ≥ 3× loyer avec garantie Visale), lui envoyer
-    // le lien de réservation. L'email de notification ci-dessus part TOUJOURS, celui-ci est conditionnel.
+    // Auto-email RDV : si le candidat est éligible (règle unique : CDI > 3 mois ET
+    // revenus ≥ 3× loyer CC de l'annonce), lui envoyer le lien de réservation.
+    // L'email de notification ci-dessus part TOUJOURS, celui-ci est conditionnel.
     if (
       isEligibleVisitRdv(
         {
           cdiPlus3Mois: candidature.cdiPlus3Mois,
           revenusMenuels: candidature.revenusMenuels,
-          peutFournirGarant: candidature.peutFournirGarant,
-          garantieVisale: candidature.garantieVisale,
         },
-        // Loyer CC de l'annonce → seuils GLI/Visale dynamiques par annonce
+        // Loyer CC de l'annonce → seuil 3× loyer CC dynamique par annonce
         listing.price.rent + listing.price.charges
       )
     ) {
